@@ -1,0 +1,65 @@
+start : program 	<Line: 1-5>
+ program : program unit  	<Line: 1-5>
+  program : program unit  	<Line: 1-4>
+   program : program unit  	<Line: 1-3>
+    program : program unit  	<Line: 1-2>
+     program : unit  	<Line: 1-1>
+      unit : var_declaration   	<Line: 1-1>
+       var_declaration : type_specifier declaration_list SEMICOLON   	<Line: 1-1>
+        type_specifier	: INT  	<Line: 1-1>
+         INT : int 	<Line: 1>
+        declaration_list : ID  	<Line: 1-1>
+         ID : a 	<Line: 1>
+        SEMICOLON : ; 	<Line: 1>
+     unit : var_declaration   	<Line: 2-2>
+      var_declaration : type_specifier declaration_list SEMICOLON   	<Line: 2-2>
+       type_specifier	: INT  	<Line: 2-2>
+        INT : int 	<Line: 2>
+       declaration_list : declaration_list COMMA ID   	<Line: 2-2>
+        declaration_list : declaration_list COMMA ID   	<Line: 2-2>
+         declaration_list : declaration_list COMMA ID   	<Line: 2-2>
+          declaration_list : ID  	<Line: 2-2>
+           ID : b 	<Line: 2>
+          COMMA : , 	<Line: 2>
+          ID : c 	<Line: 2>
+         COMMA : , 	<Line: 2>
+         ID : d 	<Line: 2>
+        COMMA : , 	<Line: 2>
+        ID : e 	<Line: 2>
+       SEMICOLON : ; 	<Line: 2>
+    unit : var_declaration   	<Line: 3-3>
+     var_declaration : type_specifier declaration_list SEMICOLON   	<Line: 3-3>
+      type_specifier	: FLOAT  	<Line: 3-3>
+       FLOAT : float 	<Line: 3>
+      declaration_list : declaration_list COMMA ID   	<Line: 3-3>
+       declaration_list : declaration_list COMMA ID   	<Line: 3-3>
+        declaration_list : ID  	<Line: 3-3>
+         ID : j 	<Line: 3>
+        COMMA : , 	<Line: 3>
+        ID : k 	<Line: 3>
+       COMMA : , 	<Line: 3>
+       ID : l 	<Line: 3>
+      SEMICOLON : ; 	<Line: 3>
+   unit : var_declaration   	<Line: 4-4>
+    var_declaration : type_specifier declaration_list SEMICOLON   	<Line: 4-4>
+     type_specifier	: INT  	<Line: 4-4>
+      INT : int 	<Line: 4>
+     declaration_list : ID LSQUARE CONST_INT RSQUARE 	<Line: 4-4>
+      ID : ab 	<Line: 4>
+      LSQUARE : [ 	<Line: 4>
+      CONST_INT : 10 	<Line: 4>
+      RSQUARE : ] 	<Line: 4>
+     SEMICOLON : ; 	<Line: 4>
+  unit : var_declaration   	<Line: 5-5>
+   var_declaration : type_specifier declaration_list SEMICOLON   	<Line: 5-5>
+    type_specifier	: FLOAT  	<Line: 5-5>
+     FLOAT : float 	<Line: 5>
+    declaration_list : declaration_list COMMA ID   	<Line: 5-5>
+     declaration_list : ID LSQUARE CONST_INT RSQUARE 	<Line: 5-5>
+      ID : abc 	<Line: 5>
+      LSQUARE : [ 	<Line: 5>
+      CONST_INT : 20 	<Line: 5>
+      RSQUARE : ] 	<Line: 5>
+     COMMA : , 	<Line: 5>
+     ID : f 	<Line: 5>
+    SEMICOLON : ; 	<Line: 5>

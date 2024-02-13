@@ -1,0 +1,1 @@
+Line# 10: Undeclared variable 'g1'

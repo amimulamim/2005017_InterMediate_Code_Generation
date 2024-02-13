@@ -1,0 +1,67 @@
+Line# 1: Token <INT> Lexeme int found
+type_specifier	: INT 
+Line# 1: Token <ID> Lexeme a found
+Line# 1: Token <SEMICOLON> Lexeme ; found
+declaration_list : ID 
+var_declaration : type_specifier declaration_list SEMICOLON  
+unit : var_declaration  
+program : unit 
+Line# 2: Token <INT> Lexeme int found
+type_specifier	: INT 
+Line# 2: Token <ID> Lexeme b found
+Line# 2: Token <COMMA> Lexeme , found
+declaration_list : ID 
+Line# 2: Token <ID> Lexeme c found
+Line# 2: Token <COMMA> Lexeme , found
+declaration_list : declaration_list COMMA ID  
+Line# 2: Token <ID> Lexeme d found
+Line# 2: Token <COMMA> Lexeme , found
+declaration_list : declaration_list COMMA ID  
+Line# 2: Token <ID> Lexeme e found
+Line# 2: Token <SEMICOLON> Lexeme ; found
+declaration_list : declaration_list COMMA ID  
+var_declaration : type_specifier declaration_list SEMICOLON  
+unit : var_declaration  
+program : program unit 
+Line# 3: Token <FLOAT> Lexeme float found
+type_specifier	: FLOAT 
+Line# 3: Token <ID> Lexeme j found
+Line# 3: Token <COMMA> Lexeme , found
+declaration_list : ID 
+Line# 3: Token <ID> Lexeme k found
+Line# 3: Token <COMMA> Lexeme , found
+declaration_list : declaration_list COMMA ID  
+Line# 3: Token <ID> Lexeme l found
+Line# 3: Token <SEMICOLON> Lexeme ; found
+declaration_list : declaration_list COMMA ID  
+var_declaration : type_specifier declaration_list SEMICOLON  
+unit : var_declaration  
+program : program unit 
+Line# 4: Token <INT> Lexeme int found
+type_specifier	: INT 
+Line# 4: Token <ID> Lexeme ab found
+Line# 4: Token <LSQUARE> Lexeme [ found
+Line# 4: Token <CONST_INT> Lexeme 10 found
+Line# 4: Token <RSQUARE> Lexeme ] found
+declaration_list : ID LSQUARE CONST_INT RSQUARE 
+Line# 4: Token <SEMICOLON> Lexeme ; found
+var_declaration : type_specifier declaration_list SEMICOLON  
+unit : var_declaration  
+program : program unit 
+Line# 5: Token <FLOAT> Lexeme float found
+type_specifier	: FLOAT 
+Line# 5: Token <ID> Lexeme abc found
+Line# 5: Token <LSQUARE> Lexeme [ found
+Line# 5: Token <CONST_INT> Lexeme 20 found
+Line# 5: Token <RSQUARE> Lexeme ] found
+declaration_list : ID LSQUARE CONST_INT RSQUARE 
+Line# 5: Token <COMMA> Lexeme , found
+Line# 5: Token <ID> Lexeme f found
+Line# 5: Token <SEMICOLON> Lexeme ; found
+declaration_list : declaration_list COMMA ID  
+var_declaration : type_specifier declaration_list SEMICOLON  
+unit : var_declaration  
+program : program unit 
+start : program
+Total Lines: 6
+Total Errors: 0
