@@ -364,6 +364,19 @@ funcCall_factor* new_funcCall_factor(YYLTYPE location, const std::string rule,st
 return (new funcCall_factor(location.first_line,location.last_line,rule,datatype,value));
 }
 
+addop_unary* new_addop_unary(YYLTYPE location, const std::string rule,string datatype="",string value=""){
+return (new addop_unary(location.first_line,location.last_line,rule,datatype,value));
+}
+
+not_unary* new_not_unary(YYLTYPE location, const std::string rule,string datatype="",string value=""){
+return (new not_unary(location.first_line,location.last_line,rule,datatype,value));
+}
+
+term_mulop_unary*  new_term_mulop_unary(YYLTYPE location, const std::string rule,string datatype="",string value=""){
+return (new term_mulop_unary(location.first_line,location.last_line,rule,datatype,value));
+}
+
+
 %}
 
 %locations
@@ -986,7 +999,8 @@ $$=parsing(@$,rule,$1->getDataType(),$1->getValue())->addSubordinate($1);
           
       string newType=typeCasted($1->getDataType(),$3->getDataType());
       if(op=="%")newType="INT";
-      $$=parsing(@$,rule,newType)->addSubordinate($1)->addSubordinate(parsing(@2,"MULOP : "+op))->addSubordinate($3);
+      $$=new_term_mulop_unary(@$,rule,newType)->addSubordinate($1)->addSubordinate(parsing(@2,"MULOP : "+op))->addSubordinate($3);
+      $$->setOperator($2->getName());
       if((op=="%" || op=="/")&&($3->getValue()=="0")){
         string msg="Warning: division by zero i=0f=1Const=0"/*+$1->getValue()+" "+$3->getValue()*/;
         //errorFileOutput<<"Line# "<< @$.first_line<<": "<<msg<<endl;
@@ -1005,8 +1019,8 @@ unary_expression : ADDOP unary_expression  {
   //   errorMessage("Can not use unary operator on void type",$2->getFirstLine());
   // }
   string rule="unary_expression : ADDOP unary_expression";logRule(rule);
-  $$=parsing(@$,rule,$2->getDataType())->addSubordinate(parsing(@1,"ADDOP : ",$1->getName()))->addSubordinate($2);
-
+  $$=new_addop_unary(@$,rule,$2->getDataType())->addSubordinate(parsing(@1,"ADDOP : ",$1->getName()))->addSubordinate($2);
+  $$->setOperator($1->getName());
 
 }
 		 | NOT unary_expression {
@@ -1014,7 +1028,7 @@ unary_expression : ADDOP unary_expression  {
     // errorMessage("Can not perform unary operation on VOID operand",$2->getFirstLine());
     //     }
       string rule="unary_expression : NOT unary_expression";logRule(rule);
-  $$=parsing(@$,rule,$2->getDataType())->addSubordinate(parsing(@1,NOT_R))->addSubordinate($2);
+  $$=new_not_unary(@$,rule,$2->getDataType())->addSubordinate(parsing(@1,NOT_R))->addSubordinate($2);
   
 
      }
@@ -1031,6 +1045,7 @@ unary_expression : ADDOP unary_expression  {
 	
 factor	: variable {
 logRule("factor	: variable ");$$=new_variable_factor(@$,"factor	: variable ",$1->getDataType(),$1->getValue())->addSubordinate($1);
+$$->setSymbolInfo($1->getSymbolInfo());
 }
 
 	| LPAREN expression RPAREN{

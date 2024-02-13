@@ -147,6 +147,12 @@ void PrintNewLabel()
     asmOut << "Label" << label++ << " : " << endl;
 }
 
+string getNewLabel(){
+    string lab= "l"+to_string(label);
+    label++;
+    return lab;
+}
+
 void genCode(std::string s,bool tab=true)
 {   
     if(tab)asmOut << "\t";
@@ -511,6 +517,135 @@ class funcCall_factor : public factor{
         }
         genCode("CALL "+name);
         push("AX");//return value pushing
+    }
+
+};
+
+class unary_expression : public ParserNode{
+       public:
+         unary_expression(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
+        : ParserNode(firstLine, lastLine, matchedRule, dataType, value)
+    {
+        
+    }
+};
+
+class addop_unary : public unary_expression{
+       public:
+         addop_unary(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
+        : unary_expression(firstLine, lastLine, matchedRule, dataType, value)
+    {
+        
+    }
+    void processCode(ofstream& out){
+           for(auto x : this->getSubordinate()){
+            x->processCode(out);
+        }
+
+        if(this->getOperator() =="-"){
+            pop("AX");
+            genCode("NEG AX");
+            push("AX");
+
+        }
+    }
+
+
+
+};
+
+class not_unary : public unary_expression {
+          public:
+         not_unary(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
+        : unary_expression(firstLine, lastLine, matchedRule, dataType, value)
+    {
+        
+    }
+    void processCode(ofstream& out){
+           for(auto x : this->getSubordinate()){
+            x->processCode(out);
+        }
+
+        
+           // pop("AX");
+            string label1=getNewLabel();
+             string label2=getNewLabel();
+
+		genCode("\tPOP AX");
+		genCode("\tCMP AX, 0");
+		genCode("\tJNE " + label1);
+		genCode("\tPUSH 1");
+		genCode("\tJMP " + label2);
+		genCode(label1 + ":");
+		genCode("\tPUSH 0");
+		genCode(label2 + ":");
+
+
+            // genCode("CMP AX,0");
+             
+            // genCode("JE "+l1);
+            // genCode("MOV AX,0");
+            
+            // genCode("JMP "+l2);
+            // out<<l1<<" : ";
+            // genCode("MOV AX,1");
+            // out<<l2<<" : ";
+            // push("AX");
+
+
+
+
+
+
+
+        
+    }
+
+};
+
+// class factor_unary: public unary_expression{
+
+
+
+// };
+class term :public ParserNode{
+      public:
+         term(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
+        : ParserNode(firstLine, lastLine, matchedRule, dataType, value)
+    {
+        
+    }
+
+  
+
+};
+
+class term_mulop_unary : public term{
+    public:
+       term_mulop_unary(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
+        : term(firstLine, lastLine, matchedRule, dataType, value)
+    {
+        
+    }
+
+    void processCode(ofstream& out){
+            for(auto x : this->getSubordinate()){
+            x->processCode(out);
+        }
+        pop("BX");
+        pop("AX");
+        if(this->getOperator() =="*"){
+            genCode("IMUL BX");
+        }
+        else{
+            genCode("CWD");
+            genCode("IDIV BX");
+            if(this->getOperator()=="%"){
+                genCode("MOV AX,DX");
+            }
+        }
+        push("AX");
+        
     }
 
 };

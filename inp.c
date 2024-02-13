@@ -5,13 +5,16 @@ void f(){
 
 void main() {
     int c,d[5];
-    
+    !1;
+    -2;
+    7%3;
     c++;
     g1;
     println(c);
     d[2];
     10;
     f();
+
     //c=a+b;
     //println(c);
 }

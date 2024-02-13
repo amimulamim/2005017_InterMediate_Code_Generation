@@ -17,6 +17,7 @@ class ParserNode{
     ofstream asmOut;
     SymbolInfo* symbolInfo;
     string trueLabel,falseLabel,nextLabel;
+    string op;
 
     public:
     ParserNode(int firstLine, int lastLine,string matchedRule,string dataType="",string value=""){
@@ -35,6 +36,7 @@ class ParserNode{
         trueLabel="";
         falseLabel="";
         nextLabel="";
+        op="";
             // size_t found = matchedRule.find("error");
             // isError|= (found != std::string::npos);
     // If found is not equal to std::string::npos, it means "error" was found
@@ -141,6 +143,12 @@ class ParserNode{
         else return subordinates[n-1];
     }
 
+    virtual string getOperator(){
+        return op;
+    }
+    virtual ParserNode* setOperator(string s){
+        this->op = s;
+    }
     ParserNode* replaceSubordinate(int n,ParserNode* sub){
         if(n>subordinates.size())return this;
         subordinates[n-1]=sub;

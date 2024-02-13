@@ -21,6 +21,31 @@ Label1 :
 		MOV BP, SP
 	SUB SP,2
 	SUB SP,10
+MOV AX,1
+	PUSH AX
+		POP AX
+		CMP AX, 0
+		JNE l2
+		PUSH 1
+		JMP l3
+	l2:
+		PUSH 0
+	l3:
+MOV AX,2
+	PUSH AX
+	POP AX
+	NEG AX
+	PUSH AX
+MOV AX,7
+	PUSH AX
+MOV AX,3
+	PUSH AX
+	POP BX
+	POP AX
+	CWD
+	IDIV BX
+	MOV AX,DX
+	PUSH AX
 	MOV AX, [BP-2]
 	PUSH AX
 	INC W.[BP-2]
@@ -39,7 +64,7 @@ MOV AX,10
 	PUSH AX
 	CALL f
 	PUSH AX
-Label2 : 
+Label4 : 
 		ADD SP, 12
 		POP BP
 		MOV AX, 4CH
