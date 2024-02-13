@@ -1,19 +1,15 @@
 int a,b[9];
-void f(){
+void f(int x){
 
 }
 
 void main() {
     int c,d[5];
-    !1;
-    -2;
-    7%3;
-    c++;
-    g1;
+    7%3+5-2;
+  
     println(c);
-    d[2];
-    10;
-    f();
+
+    f(5+3);
 
     //c=a+b;
     //println(c);

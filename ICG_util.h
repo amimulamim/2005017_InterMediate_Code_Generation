@@ -514,6 +514,14 @@ class funcCall_factor : public factor{
         if(name=="println"){
             isPrinterCalled=true;
             cout<<"this is a printer\n"<<endl;
+            SymbolInfo* info=this->getSubordinateNth(3)->getSymbolInfo();
+            cout<<"println info = "<<*info<<endl;
+            genCode("MOV AX,"+getVarAddressName(info->getName()));
+        
+
+            push("AX");
+
+
         }
         genCode("CALL "+name);
         push("AX");//return value pushing
@@ -647,5 +655,42 @@ class term_mulop_unary : public term{
         push("AX");
         
     }
+
+};
+class simple_expr :public ParserNode{
+      public:
+         simple_expr(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
+        : ParserNode(firstLine, lastLine, matchedRule, dataType, value)
+    {
+        
+    }
+
+  
+
+};
+class simple_expr_addop_term : public simple_expr{
+
+      public:
+       simple_expr_addop_term(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
+        : simple_expr(firstLine, lastLine, matchedRule, dataType, value)
+    {
+        
+    }
+
+    void processCode(ofstream& out){
+            for(auto x : this->getSubordinate()){
+            x->processCode(out);
+        }
+        pop("BX");
+        pop("AX");
+        if(this->getOperator() =="+"){
+            genCode("ADD AX,BX");
+        }
+        else{
+            genCode("SUB AX,BX");
+        }
+        push("AX");
+    }
+        
 
 };

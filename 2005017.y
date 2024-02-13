@@ -376,6 +376,9 @@ term_mulop_unary*  new_term_mulop_unary(YYLTYPE location, const std::string rule
 return (new term_mulop_unary(location.first_line,location.last_line,rule,datatype,value));
 }
 
+simple_expr_addop_term* new_simple_expr_addop_term(YYLTYPE location, const std::string rule,string datatype="",string value=""){
+return (new simple_expr_addop_term(location.first_line,location.last_line,rule,datatype,value));
+}
 
 %}
 
@@ -858,7 +861,7 @@ parameter_list  : parameter_list COMMA type_specifier ID{
 	  | PRINTLN LPAREN ID RPAREN SEMICOLON{
       string rule="statement : PRINTLN LPAREN ID RPAREN SEMICOLON";
       logRule(rule);
-      $$=new_funcCall_factor(@$,rule)->addSubordinate(parsing(@1,PRINTLN_R))->addSubordinate(parsing(@2,LPAREN_R))->addSubordinate(parsing(@3,"ID : "+$3->getName()));
+      $$=new_funcCall_factor(@$,rule)->addSubordinate(parsing(@1,PRINTLN_R))->addSubordinate(parsing(@2,LPAREN_R))->addSubordinate(parsing(@3,"ID : "+$3->getName())->setSymbolInfo($3));
       $$->addSubordinate(parsing(@4,RPAREN_R))->addSubordinate(parsing(@5,SEMICOLON_R));
       $$->setSymbolInfo(new SymbolInfo("println","PRINTLN"));
       SymbolInfo* check=table->lookUp($3->getName());
@@ -983,7 +986,8 @@ $$=parsing(@$,rule,$1->getDataType(),$1->getValue())->addSubordinate($1);
       string op=$2->getName();
           //  cout<<"typecast these : "<<$1->getValue()<<" "<<$3->getValue()<<endl;
       string newType=typeCasted($1->getDataType(),$3->getDataType());
-      $$=parsing(@$,rule,newType)->addSubordinate($1)->addSubordinate(parsing(@2,"ADDOP : "+op))->addSubordinate($3);
+      $$=new_simple_expr_addop_term(@$,rule,newType)->addSubordinate($1)->addSubordinate(parsing(@2,"ADDOP : "+op))->addSubordinate($3);
+      $$->setOperator($2->getName());
 
       }
 		  ;
