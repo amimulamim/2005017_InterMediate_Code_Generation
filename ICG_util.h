@@ -804,8 +804,12 @@ class var_assignop_logic : public expression {
         
     }
     void processCode(ofstream& out){
-        for(auto x:this->getSubordinate()){
+      
+
+        for(int i=this->getSubordinate().size(); i>0; i--){
+            ParserNode* x=getSubordinateNth(i);
             x->processCode(out);
+
         }
 
         assignHandler(out);
