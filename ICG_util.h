@@ -58,6 +58,7 @@ string printlnProc(){
     lea dx,si
     mov ah,9
     int 21h
+    call new_line
     pop si
     pop dx
     pop cx
@@ -307,13 +308,7 @@ class func_definition : public ParserNode
 
         else
         {
-//             cout << "si = " << *(this->getSymbolInfo()) << endl;
-//             vector<SymbolInfo *> params = this->getSymbolInfo()->getParameters();
-//             cout << "params: " << params.size() << endl;
-//             for(SymbolInfo *param : params)
-// {
-//     cout<<*param<<endl;
-// }        
+  
     if (params.size() != 0)
                 genCode("\tRET " + to_string(params.size() * 2));
             else
@@ -345,6 +340,58 @@ public:
     }
 };
 
+class variable: public ParserNode{
+
+    void varHandler(ofstream& out){
+
+        
+        SymbolInfo* si=this->getSymbolInfo();
+        cout<<"-------------------------------- variable: "<<*si<<endl;
+        if(si->isArray()){
+            if(getVariableOffset(si->getName())==-1){
+                pop("CX");//getting index
+                genCode("LEA SI,"+si->getName());
+                genCode("SHL CX,1");
+                genCode("ADD SI,CX");
+               // genCode("MOV AX,[SI]");
+
+
+            }
+            else{
+                pop("CX");//getting index
+                genCode("SHL CX,1");
+                genCode("ADD CX,"+to_string(getVariableOffset(si->getName())));
+                genCode("MOV DI,BP");
+                genCode("SUB DI,CX");
+                //genCode("MOV AX,[DI]");
+
+            }
+
+        }
+        else{
+            //genCode("MOV AX,"+getVarAddressName(si->getName()));
+        }
+
+       // push("AX");
+
+    }
+
+    public:
+        variable(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
+        : ParserNode(firstLine, lastLine, matchedRule, dataType, value)
+    {
+    }
+    void processCode(ofstream& out){
+
+            for(auto x:this->getSubordinate()){
+                x->processCode(out);
+
+            }
+            varHandler(out);
+        
+    }
+};
+
 
 class factor: public ParserNode{
      public:
@@ -352,7 +399,6 @@ class factor: public ParserNode{
         : ParserNode(firstLine, lastLine, matchedRule, dataType, value)
     {
     }
-    
 };
 
 class var_incDec: public factor{
@@ -374,6 +420,10 @@ class var_incDec: public factor{
         return this;
     }
     void processCode(ofstream& out){
+        for(auto x:this->getSubordinate()){
+            x->processCode(out);
+        }
+
         ParserNode* node=getSubordinateNth(1);
         SymbolInfo* sym=node->getSymbolInfo();
 
@@ -388,22 +438,13 @@ class var_incDec: public factor{
         int offset=getVariableOffset(sym->getName());
         
         if (offset == -1) {
-            // element of some global array
-            //pop_from_stack("CX");
-            genCode("POP CX");
-            genCode("LEA SI, " + sym->getName());
-            genCode("SHL CX, 1");
-            genCode("ADD SI, CX");
+           
             genCode("MOV AX, [SI]");
             genCode("PUSH AX");
             genCode(op + " W.[SI]");
         } else {
             // element of some local array, index is in CX
-            genCode("POP CX");
-            genCode("SHL CX, 1");
-            genCode("ADD CX, " + to_string(offset));
-            genCode("MOV DI, BP");
-            genCode("SUB DI, CX");
+           
             genCode("MOV AX, [DI]");
             genCode("PUSH AX");
             genCode(op + " W.[DI]");
@@ -424,25 +465,22 @@ class variable_factor:public factor{
         
     }
     void processCode(ofstream& out){
-        ParserNode* var=this->getSubordinateNth(1);
-        SymbolInfo* si=var->getSymbolInfo();
-        cout<<"-------------------------------- varFac: "<<*si<<endl;
+        for(auto x: this->getSubordinate()){
+            x->processCode(out);
+        }
+
+    ParserNode* var=this->getSubordinateNth(1);
+     SymbolInfo* si=var->getSymbolInfo();
+        cout<<"-------------------------------- variable_factor: "<<*si<<endl;
         if(si->isArray()){
             if(getVariableOffset(si->getName())==-1){
-                pop("CX");//getting index
-                genCode("LEA SI,"+si->getName());
-                genCode("SHL CX,1");
-                genCode("ADD SI,CX");
+
                 genCode("MOV AX,[SI]");
 
 
             }
             else{
-                pop("CX");//getting index
-                genCode("SHL CX,1");
-                genCode("ADD CX,"+to_string(getVariableOffset(si->getName())));
-                genCode("MOV DI,BP");
-                genCode("SUB DI,CX");
+              
                 genCode("MOV AX,[DI]");
 
             }
@@ -453,7 +491,39 @@ class variable_factor:public factor{
         }
 
         push("AX");
+        
     }
+    // void processCode(ofstream& out){
+    //     ParserNode* var=this->getSubordinateNth(1);
+    //     SymbolInfo* si=var->getSymbolInfo();
+    //     cout<<"-------------------------------- varFac: "<<*si<<endl;
+    //     if(si->isArray()){
+    //         if(getVariableOffset(si->getName())==-1){
+    //             pop("CX");//getting index
+    //             genCode("LEA SI,"+si->getName());
+    //             genCode("SHL CX,1");
+    //             genCode("ADD SI,CX");
+    //             genCode("MOV AX,[SI]");
+
+
+    //         }
+    //         else{
+    //             pop("CX");//getting index
+    //             genCode("SHL CX,1");
+    //             genCode("ADD CX,"+to_string(getVariableOffset(si->getName())));
+    //             genCode("MOV DI,BP");
+    //             genCode("SUB DI,CX");
+    //             genCode("MOV AX,[DI]");
+
+    //         }
+
+    //     }
+    //     else{
+    //         genCode("MOV AX,"+getVarAddressName(si->getName()));
+    //     }
+
+    //     push("AX");
+    // }
 
 
 };
@@ -693,4 +763,54 @@ class simple_expr_addop_term : public simple_expr{
     }
         
 
+};
+
+class expression: public ParserNode{
+      public:
+ expression(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
+        : ParserNode(firstLine, lastLine, matchedRule, dataType, value)
+    {
+        
+    }
+
+};
+
+class var_assignop_logic : public expression {
+    void assignHandler(ofstream& out){
+        pop("AX");
+        SymbolInfo* si=this->getSubordinateNth(1)->getSymbolInfo();
+        cout<<"-------------------------------- variable assignop : "<<*si<<endl;
+        if(si->isArray()){
+            if(getVariableOffset(si->getName())==-1){
+                genCode("MOV [SI],AX");
+            }
+            else{
+                genCode("MOV [DI],AX");
+            }
+
+        }
+        else{
+            genCode("MOV "+getVarAddressName(si->getName())+",AX");
+        }
+
+        push("AX");
+    }
+
+
+    public:
+     var_assignop_logic(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
+        : expression(firstLine, lastLine, matchedRule, dataType, value)
+    {
+        
+    }
+    void processCode(ofstream& out){
+        for(auto x:this->getSubordinate()){
+            x->processCode(out);
+        }
+
+        assignHandler(out);
+
+
+
+    }
 };

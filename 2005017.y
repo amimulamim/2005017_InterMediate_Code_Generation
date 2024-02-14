@@ -348,6 +348,11 @@ ParserNode* parsing( YYLTYPE location, const std::string rule,string datatype=""
 func_definition* new_function_definition(YYLTYPE location, const std::string rule,string datatype="",string value=""){
   return (new func_definition(location.first_line,location.last_line,rule,datatype,value));
 }
+
+variable* new_variable(YYLTYPE location, const std::string rule,string datatype="",string value=""){
+  return (new variable(location.first_line,location.last_line,rule,datatype,value));
+}
+
 var_incDec* new_var_incDec(YYLTYPE location, const std::string rule,string datatype="",string value=""){
   return (new var_incDec(location.first_line,location.last_line,rule,datatype,value));
 }
@@ -378,6 +383,10 @@ return (new term_mulop_unary(location.first_line,location.last_line,rule,datatyp
 
 simple_expr_addop_term* new_simple_expr_addop_term(YYLTYPE location, const std::string rule,string datatype="",string value=""){
 return (new simple_expr_addop_term(location.first_line,location.last_line,rule,datatype,value));
+}
+
+var_assignop_logic* new_var_assignop_logic(YYLTYPE location, const std::string rule,string datatype="",string value=""){
+return (new var_assignop_logic(location.first_line,location.last_line,rule,datatype,value));
 }
 
 %}
@@ -895,7 +904,7 @@ parameter_list  : parameter_list COMMA type_specifier ID{
         // if(sii!=nullptr)$1->setVarType(sii->getVarType());
 
         validVariableAdjust($1,@1.first_line);
-        $$=parsing(@$,"variable : ID 	 ",$1->getVarType(),$1->getName())->addSubordinate(parsing(@1,"ID : "+$1->getName()));
+        $$=new_variable(@$,"variable : ID 	 ",$1->getVarType(),$1->getName())->addSubordinate(parsing(@1,"ID : "+$1->getName()));
         $$->setSymbolInfo(new SymbolInfo(*$1));
 
       }	
@@ -904,7 +913,7 @@ parameter_list  : parameter_list COMMA type_specifier ID{
       logRule(rule);
       validArray($1,$3,@1.first_line);
       
-      $$=parsing(@$,rule,$1->getVarType(),$1->getName())->addSubordinate(parsing(@1,"ID : "+$1->getName()))->addSubordinate(parsing(@2,LTHIRD_R))->addSubordinate($3)->addSubordinate(parsing(@4,RTHIRD_R));
+      $$=new_variable(@$,rule,$1->getVarType(),$1->getName())->addSubordinate(parsing(@1,"ID : "+$1->getName()))->addSubordinate(parsing(@2,LTHIRD_R))->addSubordinate($3)->addSubordinate(parsing(@4,RTHIRD_R));
       $$->setSymbolInfo(new SymbolInfo(*$1));
    }
 	 ;
@@ -920,7 +929,7 @@ $$=parsing(@$,rule,$1->getDataType(),$1->getValue())->addSubordinate($1);
 	   | variable ASSIGNOP logic_expression {
       string rule="expression : variable ASSIGNOP logic_expression";
       logRule(rule);
-      $$=parsing(@$,rule,$1->getDataType())->addSubordinate($1)->addSubordinate(parsing(@2,ASSIGN_R))->addSubordinate($3);
+      $$=new_var_assignop_logic(@$,rule,$1->getDataType())->addSubordinate($1)->addSubordinate(parsing(@2,ASSIGN_R))->addSubordinate($3);
      //cout<<"assignment: "<<$1->getDataType()<<", "<<$3->getDataType()<<endl;
       if($1->getDataType() =="VOID" || $3->getDataType() =="VOID"){
         errorMessage("Void cannot be used in expression",@1.first_line);
