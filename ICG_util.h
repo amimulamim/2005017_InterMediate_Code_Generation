@@ -594,6 +594,10 @@ class funcCall_factor : public factor{
 
         // }
         genCode("CALL "+name);
+        string retType=this->getSymbolInfo()->getVarType();
+        cout<<"calling f= "<<*this->getSymbolInfo()<<endl;
+       cout<<"rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrtype of   "<<name<<" : "<<retType<<endl;
+       if(retType!="VOID")
         push("AX");//return value pushing
     }
 

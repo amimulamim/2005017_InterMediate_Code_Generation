@@ -1,0 +1,4 @@
+Line# 6: Undeclared variable 'a'
+Line# 7: cc is not defined
+Line# 11: Undeclared variable 'a'
+Line# 11: Undeclared variable 'a'

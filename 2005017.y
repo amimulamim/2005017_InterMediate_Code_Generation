@@ -281,7 +281,9 @@ argumentsList.clear();return;
   }
   if(!news->isDefinedFunction()){
     errorMessage(s->getName() +" is not defined",line_no);
-    argumentsList.clear();return;
+    argumentsList.clear();
+    s->setVarType(news->getReturnType());
+    return;
   }
   //vector<SymbolInfo>* args=s->getParameters();
   bool ok=true;
@@ -1094,11 +1096,12 @@ string rule="factor : variable DECOP";logRule(rule);
     string rule="factor : ID LPAREN argument_list RPAREN";logRule(rule);
      funcCallADjust($1,@1.first_line);
      //cout<<"func ret type= "<<$1->getVarType()<<" name="<<$1->getName()<<endl;
-     cout<<"funcCall_factor from bison ----------------------------------------------------------------\n"<<endl;
+
     $$=new_funcCall_factor(@$,rule,$1->getVarType());
     $$->addSubordinate(parsing(@1,"ID : "+$1->getName(),$1->getReturnType()))->addSubordinate(parsing(@2,LPAREN_R));
     $$->addSubordinate($3)->addSubordinate(parsing(@4,RPAREN_R));
     $$->setSymbolInfo(new SymbolInfo(*$1));
+         cout<<"funcCall_factor from bison ----------------------------------------------------------------"<<*$1<<endl;
    
 
   }
