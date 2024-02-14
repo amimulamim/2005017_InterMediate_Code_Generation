@@ -1,0 +1,5 @@
+Line# 10: Undeclared variable 'g1'
+Line# 11: Undeclared variable 'g2'
+Line# 11: Undeclared variable 'g1'
+Line# 45: Undeclared variable 'g1'
+Line# 46: Undeclared variable 'g2'

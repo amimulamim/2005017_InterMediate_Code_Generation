@@ -1,6 +1,14 @@
 int a,b[9];
-void f(int x){
+void f(int x,int y){
 
+    int h,k;
+
+}
+
+void g(int p){
+    //println(p);
+    g1=p+229;
+    g2=-g1;
 }
 
 void main() {
@@ -32,19 +40,11 @@ void main() {
     c--;
     c--;
     println(c);
-    
-    
 
-    // d[2]++;
-  
-    // println(d[2]);
-    // d[2]++;
-    // println(d[2]);
-    // d[2]++;
-    // d[2]++;
-    // println(d[2]);
-
-    f(5+3);
+     g(212);
+    println(g1);
+    println(g2);
+   
 
     //c=a+b;
     //println(c);

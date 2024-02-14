@@ -581,18 +581,18 @@ class funcCall_factor : public factor{
         }
         string name=this->getSymbolInfo()->getName();
         cout<<" name="<<name<<endl<<endl;
-        if(name=="println"){
-            isPrinterCalled=true;
-            cout<<"this is a printer\n"<<endl;
-            SymbolInfo* info=this->getSubordinateNth(3)->getSymbolInfo();
-            cout<<"println info = "<<*info<<endl;
-            genCode("MOV AX,"+getVarAddressName(info->getName()));
+        // if(name=="println"){
+        //     isPrinterCalled=true;
+        //     cout<<"this is a printer\n"<<endl;
+        //     SymbolInfo* info=this->getSubordinateNth(3)->getSymbolInfo();
+        //     cout<<"println info = "<<*info<<endl;
+        //     genCode("MOV AX,"+getVarAddressName(info->getName()));
         
 
-            push("AX");
+        //     push("AX");
 
 
-        }
+        // }
         genCode("CALL "+name);
         push("AX");//return value pushing
     }
@@ -793,7 +793,7 @@ class var_assignop_logic : public expression {
             genCode("MOV "+getVarAddressName(si->getName())+",AX");
         }
 
-        push("AX");
+        ////////////////////////////////////////////////////push("AX");
     }
 
 
@@ -815,6 +815,41 @@ class var_assignop_logic : public expression {
         assignHandler(out);
 
 
+
+    }
+};
+
+class statement : public ParserNode {
+
+    public:
+ statement(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
+        : ParserNode(firstLine, lastLine, matchedRule, dataType, value)
+    {
+        
+    }
+
+};
+
+class printlnCaller: public statement {
+      public:
+ printlnCaller(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
+        : statement(firstLine, lastLine, matchedRule, dataType, value)
+    {
+        
+    }
+
+    void processCode(ofstream& out){
+                for(auto x : this->getSubordinate()){
+            x->processCode(out);
+        }
+        //string name=this->getSymbolInfo()->getName();
+
+            isPrinterCalled=true;
+            cout<<"this is a printer\n"<<endl;
+            SymbolInfo* info=this->getSubordinateNth(3)->getSymbolInfo();
+            cout<<"println info = "<<*info<<endl;
+            genCode("MOV AX,"+getVarAddressName(info->getName()));
+            genCode("CALL println");
 
     }
 };

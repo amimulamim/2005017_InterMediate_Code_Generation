@@ -389,6 +389,10 @@ var_assignop_logic* new_var_assignop_logic(YYLTYPE location, const std::string r
 return (new var_assignop_logic(location.first_line,location.last_line,rule,datatype,value));
 }
 
+printlnCaller* new_printlnCaller(YYLTYPE location, const std::string rule,string datatype="",string value=""){
+return (new printlnCaller(location.first_line,location.last_line,rule,datatype,value));
+}
+
 %}
 
 %locations
@@ -870,7 +874,7 @@ parameter_list  : parameter_list COMMA type_specifier ID{
 	  | PRINTLN LPAREN ID RPAREN SEMICOLON{
       string rule="statement : PRINTLN LPAREN ID RPAREN SEMICOLON";
       logRule(rule);
-      $$=new_funcCall_factor(@$,rule)->addSubordinate(parsing(@1,PRINTLN_R))->addSubordinate(parsing(@2,LPAREN_R))->addSubordinate(parsing(@3,"ID : "+$3->getName())->setSymbolInfo($3));
+      $$=new_printlnCaller(@$,rule)->addSubordinate(parsing(@1,PRINTLN_R))->addSubordinate(parsing(@2,LPAREN_R))->addSubordinate(parsing(@3,"ID : "+$3->getName())->setSymbolInfo($3));
       $$->addSubordinate(parsing(@4,RPAREN_R))->addSubordinate(parsing(@5,SEMICOLON_R));
       $$->setSymbolInfo(new SymbolInfo("println","PRINTLN"));
       SymbolInfo* check=table->lookUp($3->getName());

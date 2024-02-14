@@ -1,15 +1,15 @@
+void f(int x){
+    x=x*3+10;
+   println(x);
+    
+}
+int a;
 void main(){
-    int d[20],t;
-    d[2]=5;
-    t=d[2];
-    println(t);
-    //d[3]=d[2];
-    d[3]=7;
-    t=d[3]+d[2];
-    println(t);
-    d[3]=d[2];
-    t=d[3]+d[2];
-
-    println(t);
+    int c;
+    c=17;
+    println(c);
+    a=26;
+    f(13);
+    println(a);
 
 }
