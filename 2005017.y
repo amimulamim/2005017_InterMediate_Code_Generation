@@ -395,6 +395,39 @@ printlnCaller* new_printlnCaller(YYLTYPE location, const std::string rule,string
 return (new printlnCaller(location.first_line,location.last_line,rule,datatype,value));
 }
 
+simp_relop_simp_relexp*  new_simp_relop_simp_relexp(YYLTYPE location, const std::string rule,string datatype="",string value=""){
+return (new simp_relop_simp_relexp(location.first_line,location.last_line,rule,datatype,value));
+}
+
+rel_logic* new_rel_logic(YYLTYPE location, const std::string rule,string datatype="",string value=""){
+return (new rel_logic(location.first_line,location.last_line,rule,datatype,value));
+}
+
+rel_logicop_rel* new_rel_logicop_rel(YYLTYPE location, const std::string rule,string datatype="",string value=""){
+return (new rel_logicop_rel(location.first_line,location.last_line,rule,datatype,value));
+}
+
+compound_statement* new_compound_statement(YYLTYPE location, const std::string rule,string datatype="",string value=""){
+return (new compound_statement(location.first_line,location.last_line,rule,datatype,value));
+}
+
+compound_statement_statement* new_compound_statement_statement(YYLTYPE location, const std::string rule,string datatype="",string value=""){
+return (new compound_statement_statement(location.first_line,location.last_line,rule,datatype,value));
+}
+
+statement_statements* new_statement_statements(YYLTYPE location, const std::string rule,string datatype="",string value=""){
+return (new statement_statements(location.first_line,location.last_line,rule,datatype,value));
+}
+
+statements_statement_statements* new_statements_statement_statements(YYLTYPE location, const std::string rule,string datatype="",string value=""){
+return (new statements_statement_statements(location.first_line,location.last_line,rule,datatype,value));
+}
+
+// logic_expression_expression* new_logic_expression_expression(YYLTYPE location, const std::string rule,string datatype="",string value=""){
+// return (new logic_expression_expression(location.first_line,location.last_line,rule,datatype,value));
+// }
+
+
 %}
 
 %locations
@@ -426,9 +459,9 @@ start : program
     logRule("start : program");
     logSummary();
     $$ =parsing(@$,"start : program")->addSubordinate($1);
-    $$->print(parsetree_file);
+    
     genStartCode($$,table);
-
+    $$->print(parsetree_file);
     delete table;
   }
   
@@ -481,7 +514,7 @@ var_declaration : type_specifier declaration_list SEMICOLON
       $$=new var_declaration(@$.first_line,@$.last_line,"var_declaration : type_specifier declaration_list SEMICOLON  ");
       $$->addSubordinate($1)->addSubordinate($2)->addSubordinate(parsing(@3,SEMICOLON_R));
       $$->setGlobal(isGlobalScope);
-      cout<<"checking global ="<<isGlobalScope<<" line ="<<@$.first_line<<endl;
+     // cout<<"checking global ="<<isGlobalScope<<" line ="<<@$.first_line<<endl;
 
       for(auto symb: symbols) {
         symb->setVarType($1->getDataType());
@@ -780,7 +813,7 @@ parameter_list  : parameter_list COMMA type_specifier ID{
     } statements RCURL{
       string rule="compound_statement : LCURL statements RCURL  ";
       logRule(rule);
-      $$=parsing(@$,rule)->addSubordinate(parsing(@1,"LCURL : {"))->addSubordinate($3)->addSubordinate(parsing(@4,"RCURL : }"));
+      $$=new_compound_statement(@$,rule)->addSubordinate(parsing(@1,"LCURL : {"))->addSubordinate($3)->addSubordinate(parsing(@4,"RCURL : }"));
       table->printAll(logFileOutput);
       table->exitScope();
       //isGlobalScope = true;
@@ -800,12 +833,12 @@ parameter_list  : parameter_list COMMA type_specifier ID{
   
     statements : statement{
       logRule("statements : statement  ");
-      $$=parsing(@$,"statements : statement  ")->addSubordinate($1);
+      $$=new_statement_statements(@$,"statements : statement  ")->addSubordinate($1);
 
     }
 	   | statements statement{
             logRule("statements : statements statement ");
-      $$=parsing(@$,"statements : statements statement ")->addSubordinate($1)->addSubordinate($2);
+      $$=new_statements_statement_statements(@$,"statements : statements statement ")->addSubordinate($1)->addSubordinate($2);
 
      }| statements error statement{
                   logRule("statements : statements statement ");
@@ -848,7 +881,7 @@ parameter_list  : parameter_list COMMA type_specifier ID{
     }
 	  | compound_statement{
             logRule("statement : compound_statement");
-            $$=parsing(@$,"statement : compound_statement")->addSubordinate($1);
+            $$=new_compound_statement_statement(@$,"statement : compound_statement")->addSubordinate($1);
     }
 	  | FOR LPAREN expression_statement expression_statement expression RPAREN statement{
       string rule="statement : FOR LPAREN expression_statement expression_statement expression RPAREN statement";
@@ -961,7 +994,7 @@ $$=parsing(@$,rule,$1->getDataType(),$1->getValue())->addSubordinate($1);
 logic_expression : rel_expression 	{
   string rule="logic_expression : rel_expression 	 ";
   logRule(rule);
-$$=parsing(@$,rule,$1->getDataType(),$1->getValue())->addSubordinate($1);
+$$=new_rel_logic(@$,rule,$1->getDataType(),$1->getValue())->addSubordinate($1);
 }
 		 | rel_expression LOGICOP rel_expression {
       string rule="logic_expression : rel_expression LOGICOP rel_expression ";
@@ -970,8 +1003,8 @@ $$=parsing(@$,rule,$1->getDataType(),$1->getValue())->addSubordinate($1);
       //cout<<"typecast these : "<<$1->getValue()<<" "<<$3->getValue()<<endl;
       string newType=typeCasted($1->getDataType(),$3->getDataType());
       if(newType!="VOID")newType="INT";
-      $$=parsing(@$,rule,newType)->addSubordinate($1)->addSubordinate(parsing(@2,"LOGICOP : "+op))->addSubordinate($3);
-
+      $$=new_rel_logicop_rel(@$,rule,newType)->addSubordinate($1)->addSubordinate(parsing(@2,"LOGICOP : "+op))->addSubordinate($3);
+       $$->setOperator($2->getName());
      }	
 		 ;
 			
@@ -986,7 +1019,10 @@ $$=parsing(@$,rule,$1->getDataType(),$1->getValue())->addSubordinate($1);
           //  cout<<"typecast these : "<<$1->getValue()<<" "<<$3->getValue()<<endl;
       string newType=typeCasted($1->getDataType(),$3->getDataType());
       if(newType!="VOID")newType="INT";
-      $$=parsing(@$,rule,newType)->addSubordinate($1)->addSubordinate(parsing(@2,"RELOP : "+op))->addSubordinate($3);
+      $$=new_simp_relop_simp_relexp(@$,rule,newType)->addSubordinate($1)->addSubordinate(parsing(@2,"RELOP : "+op))->addSubordinate($3);
+      $$->setOperator($2->getName());
+    //  $$->setTrueLabel("true_label");
+      //$$->setFalseLabel("false_label");
 
     }
 		;
@@ -1101,7 +1137,7 @@ string rule="factor : variable DECOP";logRule(rule);
     $$->addSubordinate(parsing(@1,"ID : "+$1->getName(),$1->getReturnType()))->addSubordinate(parsing(@2,LPAREN_R));
     $$->addSubordinate($3)->addSubordinate(parsing(@4,RPAREN_R));
     $$->setSymbolInfo(new SymbolInfo(*$1));
-         cout<<"funcCall_factor from bison ----------------------------------------------------------------"<<*$1<<endl;
+        // cout<<"funcCall_factor from bison ----------------------------------------------------------------"<<*$1<<endl;
    
 
   }

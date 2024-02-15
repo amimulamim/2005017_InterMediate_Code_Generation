@@ -53,21 +53,31 @@ class ParserNode{
     }
     ParserNode* setTrueLabel(string label){
         this->trueLabel=label;
+        if(this->trueLabel!="")
+       // cout<<"setTrueLabel to "<<this->trueLabel<<" for "<<this->getRule()<<" at line "<<firstLine<<endl;
+        return this;
     }
     string getFalseLabel(){
         return falseLabel;
     }
     ParserNode* setFalseLabel(string label){
         this->falseLabel=label;
+        if(this->falseLabel!="")
+      // cout<<"setFalseLabel to "<<this->falseLabel<<" for "<<this->getRule()<<" at line "<<firstLine<<endl;
+        return this;
     }
     string getNextLabel(){return nextLabel;}
     ParserNode* setNextLabel(string label){
         this->nextLabel=label;
+        if(this->nextLabel!="")
+ //cout<<"setNextLabel to "<<this->nextLabel<<" for "<<this->getRule()<<" at line "<<firstLine<<endl;
+        return this;
     }
     int getFirstLine(){return firstLine;}
     int getLastLine(){return lastLine;}
     ParserNode* setErrorFlag(){
         isError=true;
+        return this;
     }
     bool isErrorFlag(){
         return isError;
@@ -101,6 +111,26 @@ class ParserNode{
         
 
     }
+
+        void print(int offset=0){
+        for(int i=0;i<offset;i++){
+            cout<<" ";
+        }
+        if(!isNonTerminal){
+            cout<<matchedRule<<" \t"<<"<Line: "<<firstLine<<">\n";
+            return;
+        }
+        cout<<matchedRule<<" \t"<<"<Line: "<<firstLine<<"-"<<lastLine<<">("<<trueLabel<<","<<falseLabel<<","<<nextLabel<<")\n";
+        if(subordinates.size()==0){return;}
+        
+        for(int i=0;i<subordinates.size();i++){
+            ParserNode* p = subordinates[i];
+            p->print(offset+1);
+        }
+        
+
+    }
+    
     void setDataType(string dataType){
         this->dataType = dataType;
     }
@@ -112,26 +142,34 @@ class ParserNode{
     string getValue(){return this->value;}
 
     vector<ParserNode*> getSubordinate(){return this->subordinates;}
-
+    ParserNode* setSubordinate(vector<ParserNode*>& children){
+        for(int i=0;i<children.size();i++){
+            subordinates[i]=children[i];
+        }
+        
+        return this;
+        }
 
     string getRule(){return this->matchedRule;}
 
     ParserNode* addDeclarations(SymbolInfo* declarations){
         this->declarations.push_back(declarations);
+        return this;
     }
 
     vector<SymbolInfo*> getDeclarations(){
         return this->declarations;
     }
-    ParserNode* setGlobal(bool global){this->isGlobal=global;}
+    ParserNode* setGlobal(bool global){this->isGlobal=global;return this;}
 
     bool isGlobalScope() {return this->isGlobal;}
 
-    ParserNode* setSymbolInfo(SymbolInfo* info){this->symbolInfo=info;}
+    ParserNode* setSymbolInfo(SymbolInfo* info){this->symbolInfo=info;return this;}
     SymbolInfo* getSymbolInfo(){return this->symbolInfo;}
     
     virtual void processCode(ofstream& asmOut){
         //cout<<"Processing "<<this->getRule()<<"..."<<endl;
+        copyLabelsToChild(1);
          for (auto x : this->getSubordinate())
         {
             //processNode(x);
@@ -148,6 +186,7 @@ class ParserNode{
     }
     virtual ParserNode* setOperator(string s){
         this->op = s;
+        return this;
     }
     ParserNode* replaceSubordinate(int n,ParserNode* sub){
         if(n>subordinates.size())return this;
@@ -156,4 +195,31 @@ class ParserNode{
 
     }
 
+    ParserNode* copyLabelsToChild(int n){
+        if(n>subordinates.size())return this;
+        subordinates[n-1]->setTrueLabel(trueLabel);
+        subordinates[n-1]->setFalseLabel(falseLabel);
+        subordinates[n-1]->setNextLabel(nextLabel);
+        return this;
+    }
+        ParserNode* copyOppositeLabelsToChild(int n){
+        if(n>subordinates.size())return this;
+        subordinates[n-1]->setTrueLabel(falseLabel);
+        subordinates[n-1]->setFalseLabel(trueLabel);
+        subordinates[n-1]->setNextLabel(nextLabel);
+        return this;
+    }
+    ParserNode* copyNextLabelsToChild(int n){
+        if(n>subordinates.size())return this;
+
+        subordinates[n-1]->setNextLabel(nextLabel);
+        return this;
+    }
+    ParserNode* copyBooleanLabelsToChild(int n){
+        if(n>subordinates.size())return this;
+        subordinates[n-1]->setTrueLabel(falseLabel);
+        subordinates[n-1]->setFalseLabel(trueLabel);
+        
+        return this;
+    }
 };

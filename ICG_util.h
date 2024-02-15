@@ -290,7 +290,7 @@ class func_definition : public ParserNode
         for(int i=params.size()-1; i>=0; i--)
 {
     string parName=params[i]->getName();
-    cout<<"adding to offset map : "<<parName<<" "<<offx<<" from "<<func_name<<endl;
+    //cout<<"adding to offset map : "<<parName<<" "<<offx<<" from "<<func_name<<endl;
     addToOffsetMap(parName, offx);
     //cout<<"offx for "<<parName<<" is "<<offx<<endl;
     offx-=2;
@@ -328,7 +328,7 @@ class func_definition : public ParserNode
         genCode(func_name + " ENDP\n\n");
 
          //if(stack_offset > 0){
-            cout<<"popping for "<<func_name<<endl;
+          //  cout<<"popping for "<<func_name<<endl;
              offsetmap.pop_back();
 
         // }
@@ -567,10 +567,11 @@ class lpExprRp : public factor {
         
     }
     void processCode(ofstream& out){
-        ParserNode* sub=this->getSubordinateNth(2);
-        sub->setTrueLabel(this->getTrueLabel());
-        sub->setFalseLabel(this->getFalseLabel());
-        sub->setNextLabel(this->getNextLabel());
+        // ParserNode* sub=this->getSubordinateNth(2);
+        // sub->setTrueLabel(this->getTrueLabel());
+        // sub->setFalseLabel(this->getFalseLabel());
+        // sub->setNextLabel(this->getNextLabel());
+        this->copyLabelsToChild(2);
 
         for (auto x : this->getSubordinate())
         {
@@ -594,33 +595,13 @@ class funcCall_factor : public factor{
             x->processCode(out);
         }
         string name=this->getSymbolInfo()->getName();
-        //cout<<" name="<<name<<endl<<endl;
-        // if(name=="println"){
-        //     isPrinterCalled=true;
-        //     //cout<<"this is a printer\n"<<endl;
-        //     SymbolInfo* info=this->getSubordinateNth(3)->getSymbolInfo();
-        //     //cout<<"println info = "<<*info<<endl;
-        //     genCode("MOV AX,"+getVarAddressName(info->getName()));
-        
 
-        //     push("AX");
-
-
-        // }
-        cout<<"before calling "<<name<<": ";printOffsetMap();
-      //  offsetmap.push_back(map<string, int>());
         genCode("CALL "+name);
         string retType=this->getSymbolInfo()->getVarType();
         //cout<<"calling f= "<<*this->getSymbolInfo()<<endl;
        //cout<<"rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrtype of   "<<name<<" : "<<retType<<endl;
        if(retType!="VOID")
         push("AX");//return value pushing
-
-
-        cout<<"after calling "<<name<<": ";printOffsetMap();
-       // if(stack_offset > 0) offsetmap.pop_back();
-       // stack_offset = 0;
-        cout<<"after returning "<<name<<": ";printOffsetMap();
     }
 
 };
@@ -642,6 +623,7 @@ class addop_unary : public unary_expression{
         
     }
     void processCode(ofstream& out){
+        copyLabelsToChild(2);
            for(auto x : this->getSubordinate()){
             x->processCode(out);
         }
@@ -666,6 +648,7 @@ class not_unary : public unary_expression {
         
     }
     void processCode(ofstream& out){
+        this->copyOppositeLabelsToChild(2);
            for(auto x : this->getSubordinate()){
             x->processCode(out);
         }
@@ -695,14 +678,7 @@ class not_unary : public unary_expression {
             // genCode("MOV AX,1");
             // out<<l2<<" : ";
             // push("AX");
-
-
-
-
-
-
-
-        
+     
     }
 
 };
@@ -733,6 +709,8 @@ class term_mulop_unary : public term{
     }
 
     void processCode(ofstream& out){
+            copyLabelsToChild(1);
+            copyLabelsToChild(3);
             for(auto x : this->getSubordinate()){
             x->processCode(out);
         }
@@ -774,6 +752,9 @@ class simple_expr_addop_term : public simple_expr{
     }
 
     void processCode(ofstream& out){
+        copyLabelsToChild(1);
+        copyLabelsToChild(3);
+
             for(auto x : this->getSubordinate()){
             x->processCode(out);
         }
@@ -830,7 +811,7 @@ class var_assignop_logic : public expression {
         
     }
     void processCode(ofstream& out){
-      
+      copyLabelsToChild(3);
 
         for(int i=this->getSubordinate().size(); i>0; i--){
             ParserNode* x=getSubordinateNth(i);
@@ -878,4 +859,311 @@ class printlnCaller: public statement {
             genCode("CALL println");
 
     }
+};
+
+class rel_expression : public ParserNode{
+    public:
+ rel_expression(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
+        : ParserNode(firstLine, lastLine, matchedRule, dataType, value)
+    {
+        
+    }
+
+};
+class simp_relop_simp_relexp:public rel_expression{
+    
+
+    string getJumpInstruction(){
+        
+        if(getOperator()=="==")return "JE";
+        if(getOperator()=="!=")return "JNE";
+        if(getOperator()=="<")return "JL";
+        if(getOperator()==">")return "JG";
+        if(getOperator()=="<=")return "JLE";
+        if(getOperator()==">=")return "JGE";
+    }
+    string getFalseJumpInstruction(){
+        if(getOperator()=="==")return "JNE";
+        if(getOperator()=="!=")return "JE";
+        if(getOperator()=="<")return "JGE";
+        if(getOperator()==">")return "JLE";
+        if(getOperator()=="<=")return "JG";
+        if(getOperator()==">=")return "JL";
+    }
+
+    // string genJump(string label,string ji="JMP"){
+        
+
+    // }
+    void relHandler(){
+        cout<<"relHandler called"<<endl;
+        cout<<"operator: "<<getOperator()<<endl;
+        pop("BX");
+        pop("AX");
+        genCode("CMP AX,BX");
+        string btrue=this->getTrueLabel();
+        string bfalse=this->getFalseLabel();
+
+
+
+        cout<<"btrue ,bfalse = "<<btrue<<" "<<bfalse<<endl;
+        if(btrue!="fall" && bfalse!="fall"){
+            genCode(getJumpInstruction()+" "+btrue);
+            genCode("JMP "+bfalse);
+        }
+        else if(btrue!="fall"){
+            genCode(getJumpInstruction()+" "+btrue);
+        }
+        else if(bfalse!="fall"){
+            genCode(getFalseJumpInstruction()+" "+bfalse);
+        }
+        cout<<"relHandling done"<<endl;
+       // push("AX");
+
+    }
+
+    public:
+     simp_relop_simp_relexp(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
+        : rel_expression(firstLine, lastLine, matchedRule, dataType, value)
+    {
+        
+    }
+    void processCode(ofstream& out){
+        copyNextLabelsToChild(1);
+        copyNextLabelsToChild(3);
+
+
+        cout<<"-------------------------------- simp rel simp called--------------------------------"<<endl;
+        for(auto x:this->getSubordinate()){
+            x->processCode(out);
+        }
+        relHandler();
+        cout<<"exiting relop "<<endl;
+    }
+
+
+};
+
+class logic_expression : public ParserNode{
+        public:
+ logic_expression(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
+        : ParserNode(firstLine, lastLine, matchedRule, dataType, value)
+    {
+        
+    }
+};
+
+class rel_logic : public logic_expression {
+    public:
+         rel_logic(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
+        : logic_expression(firstLine, lastLine, matchedRule, dataType, value)
+    {
+        
+    }
+    void processCode(ofstream& out){
+        copyLabelsToChild(1);
+
+        for(auto x: this->getSubordinate()){
+            x->processCode(out);
+        }
+        
+    }
+
+};
+class rel_logicop_rel : public logic_expression{
+    vector<ParserNode*> children;
+    void orHandler(){
+        cout<<endl<<endl<<"orrrrrrrrrrrrrr\n"<<endl<<endl;
+        if(getTrueLabel()!="fall"){
+                children[0]->setTrueLabel(getTrueLabel());
+        }
+        else{
+            children[0]->setTrueLabel(getNewLabel());
+        }
+        children[0]->setFalseLabel("fall");
+        
+        children[2]->setFalseLabel(getFalseLabel());
+        children[2]->setTrueLabel(getTrueLabel());
+
+
+     
+    }
+
+    void andHandler(){
+        cout<<endl<<endl<<"andddddddd\n"<<endl<<endl;
+        if(getFalseLabel()!="fall"){
+                children[0]->setFalseLabel(getFalseLabel());
+        }
+        else{
+            children[0]->setFalseLabel(getNewLabel());
+        }
+        children[0]->setTrueLabel("fall");
+        children[2]->setFalseLabel(getFalseLabel());
+        children[2]->setTrueLabel(getTrueLabel());
+    }
+
+    void LabelHandler(){
+        children=this->getSubordinate();
+        if(getOperator() =="||"){
+            orHandler();
+        }
+        else if(getOperator() =="&&"){
+            andHandler();
+        }
+        children[2]->setNextLabel(getNextLabel());
+        children[0]->setNextLabel(getNextLabel());
+        this->setSubordinate(children);
+    }
+
+    void orCoder(){
+        cout<<"-------------------------------- orcoding\n"<<endl;
+        if(getTrueLabel() == "fall"){
+            
+            genCode(children[0]->getTrueLabel()+" :\n");
+        }
+    }
+
+    void andCoder(){
+        if(getFalseLabel() == "fall"){
+              genCode(children[0]->getFalseLabel()+" :\n");
+        }
+    }
+    void Coder(){
+        if(getOperator() == "&&"){andCoder();}
+        if(getOperator() == "||"){orCoder();}
+    }
+
+
+
+public:
+         rel_logicop_rel(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
+        : logic_expression(firstLine, lastLine, matchedRule, dataType, value)
+    {
+        
+    }
+    void processCode(ofstream& out){
+
+        LabelHandler();//set inherited labels to children
+
+        for(auto x:this->getSubordinate()){
+            x->processCode(out);
+        }
+
+        Coder();//extra labels
+
+    }
+};
+
+
+
+class compound_statement_statement : public statement{
+          public:
+ compound_statement_statement(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
+        : statement(firstLine, lastLine, matchedRule, dataType, value)
+    {
+        
+    }
+
+    void processCode(ofstream& out){
+        copyLabelsToChild(1);
+
+        for(auto x:this->getSubordinate()){
+            x->processCode(out);
+        }
+
+
+    }
+
+};
+
+class compound_statement : public ParserNode{
+       public:
+ compound_statement(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
+        : ParserNode(firstLine, lastLine, matchedRule, dataType, value)
+    {
+        
+    }
+
+    void processCode(ofstream& out){
+        if(getNextLabel()==""){
+          //  cout<<"--------------------------------settting new label for compound statement..."<<endl;
+            this->setNextLabel(getNewLabel());
+        }
+        // ParserNode* p=getSubordinateNth(2);
+        // p->setNextLabel(getNextLabel());
+        // replaceSubordinate(2,p);
+        this->copyLabelsToChild(2);
+
+        for(auto x: this->getSubordinate()){
+            x->processCode(out);
+        }
+    }
+
+};
+
+class statements: public ParserNode{
+    public:
+     statements(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
+        : ParserNode(firstLine, lastLine, matchedRule, dataType, value)
+    {
+        
+    }
+};
+
+class statement_statements : public statements{
+
+    public:
+     statement_statements(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
+        : statements(firstLine, lastLine, matchedRule, dataType, value)
+    {
+        
+    }
+
+    void processCode(ofstream& out){
+        copyLabelsToChild(1);
+        out<<";--------------------------------; LINE "<<this->getSubordinateNth(1)->getFirstLine()<<endl;
+        for(auto x: this->getSubordinate()){
+            x->processCode(out);
+        }
+       // out<<getNextLabel()<<" :\n";
+
+
+    }
+};
+
+class statements_statement_statements : public statements{
+    public:
+         statements_statement_statements(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
+        : statements(firstLine, lastLine, matchedRule, dataType, value)
+    {
+        
+    }
+
+    void processCode(ofstream& out){
+       
+        copyBooleanLabelsToChild(1);
+        copyBooleanLabelsToChild(2);
+        vector<ParserNode*> children=getSubordinate();
+        children[0]->setNextLabel(getNewLabel());
+       // cout<<"set next label for child0 at statements statement "<<children[0]->getNextLabel()<<endl;
+        children[1]->setNextLabel(getNextLabel());
+
+
+        //cout<<"testing child1 at statements statement ";
+        //children[0]->print();
+        //children[1]->print();
+        setSubordinate(children);
+
+
+        children[0]->processCode(out);
+        
+
+        out<<children[0]->getNextLabel()<<" :\n";
+         out<<";--------------------------------; LINE "<<children[1]->getFirstLine()<<endl;
+        children[1]->processCode(out);
+
+  
+
+    }
+
 };
