@@ -636,19 +636,37 @@ class not_unary : public unary_expression {
             x->processCode(out);
         }
 
-        
+        if(this->getTrueLabel()==""){this->setTrueLabel(getNewLabel());}
+        if(this->getFalseLabel()==""){this->setFalseLabel(getNewLabel());}
            // pop("AX");
-            string label1=getNewLabel();
-             string label2=getNewLabel();
+            string label1=getFalseLabel();
+             string label2=getTrueLabel();
+
+        //      		genCode("\tPOP AX");  ///////////////////this is kept as backup
+		// genCode("\tCMP AX, 0");
+		// genCode("\tJNE " + label1);
+
+        
+		// genCode("\tPUSH 1");
+		// genCode("\tJMP " + label2);
+		// genCode(label1 + ":");
+		// genCode("\tPUSH 0");
+		// genCode(label2 + ":");
 
 		genCode("\tPOP AX");
 		genCode("\tCMP AX, 0");
+        if(!conditionality){
 		genCode("\tJNE " + label1);
 		genCode("\tPUSH 1");
 		genCode("\tJMP " + label2);
 		genCode(label1 + ":");
 		genCode("\tPUSH 0");
 		genCode(label2 + ":");
+        }
+        else{
+            genCode("\tJNE " + label1);
+            genCode("\tJE "+label2);
+        }
 
 
             // genCode("CMP AX,0");

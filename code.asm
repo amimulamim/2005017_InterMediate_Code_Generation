@@ -2,86 +2,99 @@
 .STACK 1000H
 .Data
 	number DB "00000$"
+	g1 DW 1 DUP (0000H)
+	g2 DW 1 DUP (0000H)
+	a DW 1 DUP (0000H)
+	b DW 9 DUP (0000H)
 .CODE
+	f PROC
+	PUSH BP
+	MOV BP, SP
+;--------------------------------; LINE 4
+	SUB SP,2
+	SUB SP,2
+L1 :
+		ADD SP, 4
+		POP BP
+		RET 4
+	f ENDP
+
+
+	g PROC
+	PUSH BP
+	MOV BP, SP
+;--------------------------------; LINE 10
+	MOV AX,[BP+4]
+	PUSH AX
+MOV AX,229
+	PUSH AX
+	POP BX
+	POP AX
+	ADD AX,BX
+	PUSH AX
+	POP AX
+	MOV g1,AX
+L3 :
+;--------------------------------; LINE 11
+	MOV AX,g1
+	PUSH AX
+	POP AX
+	NEG AX
+	PUSH AX
+	POP AX
+	MOV g2,AX
+L4 :
+		POP BP
+		RET 2
+	g ENDP
+
+
 	main PROC
 	MOV AX, @DATA
 	MOV DS, AX
 	PUSH BP
 	MOV BP, SP
-;--------------------------------; LINE 2
+;--------------------------------; LINE 15
 	SUB SP,2
+	SUB SP,10
 	SUB SP,2
-L22 :
-;--------------------------------; LINE 3
-MOV AX,1
+L34 :
+;--------------------------------; LINE 16
+MOV AX,7
 	PUSH AX
-MOV AX,5
+MOV AX,4
 	PUSH AX
-	POP DX
+	POP BX
 	POP AX
-	CMP AX,DX
-		JGE L24
+	CWD
+	IDIV BX
+	MOV AX,DX
+	PUSH AX
+MOV AX,7
+	PUSH AX
+	POP BX
+	POP AX
+	ADD AX,BX
+	PUSH AX
 MOV AX,2
-	PUSH AX
-MOV AX,3
-	PUSH AX
-	POP DX
-	POP AX
-	CMP AX,DX
-		JL L23
-		JMP L24
-	L23:
-		PUSH 1
-		JMP L25
-	L24:
-		PUSH 0
-	L25:
-	POP AX
-	MOV [BP-2],AX
-L21 :
-;--------------------------------; LINE 4
-MOV AX,1
-	PUSH AX
-MOV AX,5
-	PUSH AX
-	POP DX
-	POP AX
-	CMP AX,DX
-		JGE L27
-MOV AX,2
-	PUSH AX
-MOV AX,3
-	PUSH AX
-	POP DX
-	POP AX
-	CMP AX,DX
-		JE L26
-		JMP L27
-	L26:
-		PUSH 1
-		JMP L28
-	L27:
-		PUSH 0
-	L28:
-	POP AX
-	MOV [BP-4],AX
-L20 :
-;--------------------------------; LINE 5
-	MOV AX,[BP-4]
-	CALL println
-L19 :
-;--------------------------------; LINE 6
-MOV AX,2
-	PUSH AX
-MOV AX,3
-	PUSH AX
-MOV AX,5
 	PUSH AX
 	POP BX
 	POP AX
 	IMUL BX
 	PUSH AX
-MOV AX,9
+	POP AX
+	MOV [BP-2],AX
+L33 :
+;--------------------------------; LINE 17
+	MOV AX,[BP-2]
+	CALL println
+L32 :
+;--------------------------------; LINE 18
+MOV AX,1
+	PUSH AX
+MOV AX,3
+	PUSH AX
+MOV AX,5
 	PUSH AX
 	POP BX
 	POP AX
@@ -97,303 +110,251 @@ MOV AX,8
 	POP AX
 	ADD AX,BX
 	PUSH AX
-MOV AX,7
+MOV AX,9
 	PUSH AX
 	POP BX
 	POP AX
 	CWD
 	IDIV BX
+	MOV AX,DX
+	PUSH AX
+MOV AX,2
+	PUSH AX
+	POP CX
+	LEA SI,b
+	SHL CX,1
+	ADD SI,CX
+	POP AX
+	MOV [SI],AX
+L31 :
+;--------------------------------; LINE 19
+MOV AX,2
+	PUSH AX
+	POP CX
+	LEA SI,b
+	SHL CX,1
+	ADD SI,CX
+	MOV AX,[SI]
 	PUSH AX
 	POP AX
-	MOV [BP-4],AX
+	MOV [BP-14],AX
+L30 :
+;--------------------------------; LINE 20
+	MOV AX,[BP-14]
+	CALL println
+L29 :
+;--------------------------------; LINE 21
+MOV AX,2
+	PUSH AX
+	POP CX
+	LEA SI,b
+	SHL CX,1
+	ADD SI,CX
+	MOV AX,[SI]
+	PUSH AX
+MOV AX,5
+	PUSH AX
+	POP BX
+	POP AX
+	ADD AX,BX
+	PUSH AX
+	MOV AX,[BP-2]
+	PUSH AX
+	POP BX
+	POP AX
+	ADD AX,BX
+	PUSH AX
+MOV AX,3
+	PUSH AX
+	POP CX
+	LEA SI,b
+	SHL CX,1
+	ADD SI,CX
+	POP AX
+	MOV [SI],AX
+L28 :
+;--------------------------------; LINE 22
+MOV AX,3
+	PUSH AX
+	POP CX
+	LEA SI,b
+	SHL CX,1
+	ADD SI,CX
+	MOV AX,[SI]
+	PUSH AX
+MOV AX,3
+	PUSH AX
+	POP CX
+	SHL CX,1
+	ADD CX,12
+	MOV DI,BP
+	SUB DI,CX
+	POP AX
+	MOV [DI],AX
+L27 :
+;--------------------------------; LINE 23
+MOV AX,3
+	PUSH AX
+	POP CX
+	SHL CX,1
+	ADD CX,12
+	MOV DI,BP
+	SUB DI,CX
+	MOV AX,[DI]
+	PUSH AX
+	POP AX
+	MOV [BP-14],AX
+L26 :
+;--------------------------------; LINE 24
+	MOV AX,[BP-14]
+	CALL println
+L25 :
+;--------------------------------; LINE 25
+MOV AX,3
+	PUSH AX
+	POP CX
+	SHL CX,1
+	ADD CX,12
+	MOV DI,BP
+	SUB DI,CX
+	MOV AX, [DI]
+	PUSH AX
+	INC W.[DI]
+L24 :
+;--------------------------------; LINE 26
+MOV AX,3
+	PUSH AX
+	POP CX
+	SHL CX,1
+	ADD CX,12
+	MOV DI,BP
+	SUB DI,CX
+	MOV AX,[DI]
+	PUSH AX
+	POP AX
+	MOV [BP-14],AX
+L23 :
+;--------------------------------; LINE 27
+	MOV AX,[BP-14]
+	CALL println
+L22 :
+;--------------------------------; LINE 28
+MOV AX,3
+	PUSH AX
+	POP CX
+	SHL CX,1
+	ADD CX,12
+	MOV DI,BP
+	SUB DI,CX
+	MOV AX, [DI]
+	PUSH AX
+	DEC W.[DI]
+L21 :
+;--------------------------------; LINE 29
+MOV AX,3
+	PUSH AX
+	POP CX
+	SHL CX,1
+	ADD CX,12
+	MOV DI,BP
+	SUB DI,CX
+	MOV AX, [DI]
+	PUSH AX
+	DEC W.[DI]
+L20 :
+;--------------------------------; LINE 30
+MOV AX,3
+	PUSH AX
+	POP CX
+	SHL CX,1
+	ADD CX,12
+	MOV DI,BP
+	SUB DI,CX
+	MOV AX,[DI]
+	PUSH AX
+	POP AX
+	MOV [BP-14],AX
+L19 :
+;--------------------------------; LINE 31
+	MOV AX,[BP-14]
+	CALL println
 L18 :
-;--------------------------------; LINE 7
+;--------------------------------; LINE 32
+MOV AX,5
+	PUSH AX
+MOV AX,3
+	PUSH AX
+	POP CX
+	SHL CX,1
+	ADD CX,12
+	MOV DI,BP
+	SUB DI,CX
+	POP AX
+	MOV [DI],AX
+L17 :
+;--------------------------------; LINE 33
+MOV AX,3
+	PUSH AX
+	POP CX
+	SHL CX,1
+	ADD CX,12
+	MOV DI,BP
+	SUB DI,CX
+	MOV AX,[DI]
+	PUSH AX
+	POP AX
+	MOV [BP-14],AX
+L16 :
+;--------------------------------; LINE 34
+	MOV AX,[BP-14]
+	CALL println
+L15 :
+;--------------------------------; LINE 36
 	MOV AX,[BP-2]
 	CALL println
-L17 :
-;--------------------------------; LINE 8
-	MOV AX,[BP-4]
-	CALL println
-L16 :
-;--------------------------------; LINE 9
-MOV AX,1
-	PUSH AX
-MOV AX,5
-	PUSH AX
-	POP DX
-	POP AX
-	CMP AX,DX
-		JL L29
-MOV AX,2
-	PUSH AX
-MOV AX,3
-	PUSH AX
-	POP DX
-	POP AX
-	CMP AX,DX
-		JL L29
-		JMP L30
-	L29:
-		PUSH 1
-		JMP L31
-	L30:
-		PUSH 0
-	L31:
-	POP AX
-	MOV [BP-4],AX
-L15 :
-;--------------------------------; LINE 10
-	MOV AX,[BP-4]
-	CALL println
 L14 :
-;--------------------------------; LINE 11
-MOV AX,1
+;--------------------------------; LINE 37
+	MOV AX, [BP-2]
 	PUSH AX
-MOV AX,5
-	PUSH AX
-	POP DX
-	POP AX
-	CMP AX,DX
-		JG L32
-MOV AX,2
-	PUSH AX
-MOV AX,3
-	PUSH AX
-	POP DX
-	POP AX
-	CMP AX,DX
-		JL L32
-		JMP L33
-	L32:
-		PUSH 1
-		JMP L34
-	L33:
-		PUSH 0
-	L34:
-	POP AX
-	MOV [BP-4],AX
+	INC W.[BP-2]
 L13 :
-;--------------------------------; LINE 12
-	MOV AX,[BP-4]
+;--------------------------------; LINE 38
+	MOV AX,[BP-2]
 	CALL println
 L12 :
-;--------------------------------; LINE 13
-MOV AX,1
+;--------------------------------; LINE 39
+	MOV AX, [BP-2]
 	PUSH AX
-MOV AX,5
-	PUSH AX
-	POP DX
-	POP AX
-	CMP AX,DX
-		JG L35
-MOV AX,2
-	PUSH AX
-MOV AX,3
-	PUSH AX
-	POP DX
-	POP AX
-	CMP AX,DX
-		JG L35
-		JMP L36
-	L35:
-		PUSH 1
-		JMP L37
-	L36:
-		PUSH 0
-	L37:
-	POP AX
-	MOV [BP-4],AX
+	DEC W.[BP-2]
 L11 :
-;--------------------------------; LINE 14
-	MOV AX,[BP-4]
-	CALL println
+;--------------------------------; LINE 40
+	MOV AX, [BP-2]
+	PUSH AX
+	DEC W.[BP-2]
 L10 :
-;--------------------------------; LINE 15
-MOV AX,1
+;--------------------------------; LINE 41
+	MOV AX, [BP-2]
 	PUSH AX
-MOV AX,5
-	PUSH AX
-	POP DX
-	POP AX
-	CMP AX,DX
-		JE L39
-MOV AX,2
-	PUSH AX
-MOV AX,3
-	PUSH AX
-MOV AX,1
-	PUSH AX
-	POP BX
-	POP AX
-	SUB AX,BX
-	PUSH AX
-	POP DX
-	POP AX
-	CMP AX,DX
-		JNE L38
-		JMP L39
-	L38:
-		PUSH 1
-		JMP L40
-	L39:
-		PUSH 0
-	L40:
-	POP AX
-	MOV [BP-4],AX
+	DEC W.[BP-2]
 L9 :
-;--------------------------------; LINE 16
-	MOV AX,[BP-4]
+;--------------------------------; LINE 42
+	MOV AX,[BP-2]
 	CALL println
 L8 :
-;--------------------------------; LINE 17
-MOV AX,1
+;--------------------------------; LINE 44
+MOV AX,212
 	PUSH AX
-MOV AX,5
-	PUSH AX
-	POP DX
-	POP AX
-	CMP AX,DX
-		JE L42
-MOV AX,2
-	PUSH AX
-MOV AX,3
-	PUSH AX
-MOV AX,1
-	PUSH AX
-	POP BX
-	POP AX
-	SUB AX,BX
-	PUSH AX
-	POP DX
-	POP AX
-	CMP AX,DX
-		JE L41
-		JMP L42
-	L41:
-		PUSH 1
-		JMP L43
-	L42:
-		PUSH 0
-	L43:
-	POP AX
-	MOV [BP-4],AX
+	CALL g
 L7 :
-;--------------------------------; LINE 18
-	MOV AX,[BP-4]
+;--------------------------------; LINE 45
+	MOV AX,g1
 	CALL println
 L6 :
-;--------------------------------; LINE 19
-MOV AX,1
-	PUSH AX
-MOV AX,5
-	PUSH AX
-	POP DX
-	POP AX
-	CMP AX,DX
-		JE L45
-MOV AX,2
-	PUSH AX
-MOV AX,3
-	PUSH AX
-MOV AX,1
-	PUSH AX
-	POP BX
-	POP AX
-	SUB AX,BX
-	PUSH AX
-	POP DX
-	POP AX
-	CMP AX,DX
-		JLE L44
-		JMP L45
-	L44:
-		PUSH 1
-		JMP L46
-	L45:
-		PUSH 0
-	L46:
-	POP AX
-	MOV [BP-4],AX
-L5 :
-;--------------------------------; LINE 20
-	MOV AX,[BP-4]
+;--------------------------------; LINE 46
+	MOV AX,g2
 	CALL println
-L4 :
-;--------------------------------; LINE 21
-MOV AX,1
-	PUSH AX
-MOV AX,5
-	PUSH AX
-	POP DX
-	POP AX
-	CMP AX,DX
-		JE L48
-MOV AX,2
-	PUSH AX
-MOV AX,3
-	PUSH AX
-MOV AX,1
-	PUSH AX
-	POP BX
-	POP AX
-	SUB AX,BX
-	PUSH AX
-	POP DX
-	POP AX
-	CMP AX,DX
-		JGE L47
-		JMP L48
-	L47:
-		PUSH 1
-		JMP L49
-	L48:
-		PUSH 0
-	L49:
-	POP AX
-	MOV [BP-4],AX
-L3 :
-;--------------------------------; LINE 22
-	MOV AX,[BP-4]
-	CALL println
-L2 :
-;--------------------------------; LINE 23
-MOV AX,1
-	PUSH AX
-MOV AX,5
-	PUSH AX
-	POP DX
-	POP AX
-	CMP AX,DX
-		JE L51
-MOV AX,2
-	PUSH AX
-MOV AX,3
-	PUSH AX
-MOV AX,1
-	PUSH AX
-	POP BX
-	POP AX
-	SUB AX,BX
-	PUSH AX
-	POP DX
-	POP AX
-	CMP AX,DX
-		JG L50
-		JMP L51
-	L50:
-		PUSH 1
-		JMP L52
-	L51:
-		PUSH 0
-	L52:
-	POP AX
-	MOV [BP-4],AX
-L1 :
-;--------------------------------; LINE 24
-	MOV AX,[BP-4]
-	CALL println
-L53 :
-		ADD SP, 4
+L35 :
+		ADD SP, 14
 		POP BP
 		MOV AX, 4CH
 		INT 21H
