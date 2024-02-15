@@ -1105,7 +1105,8 @@ $$->setSymbolInfo($1->getSymbolInfo());
 
 	| LPAREN expression RPAREN{
     string rule="factor : LPAREN expression RPAREN";logRule(rule);
-    $$=parsing(@$,rule,$2->getDataType(),$2->getValue())->addSubordinate(parsing(@1,LPAREN_R))->addSubordinate($2)->addSubordinate(parsing(@3,RPAREN_R));
+    $$=new lpExprRp(@$.first_line,@$.last_line,rule,$2->getDataType(),$2->getValue());
+    $$->addSubordinate(parsing(@1,LPAREN_R))->addSubordinate($2)->addSubordinate(parsing(@3,RPAREN_R));
 
   }
 	| CONST_INT {logRule("factor : CONST_INT");$$=new_int_factor(@$,"factor : CONST_INT ","INT",$1->getName())->addSubordinate(parsing(@$,"CONST_INT : "+$1->getName()));

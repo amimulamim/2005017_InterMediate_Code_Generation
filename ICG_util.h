@@ -9,6 +9,8 @@
 #include "SymbolTable/SymbolTable.h"
 #include "ParseTree.h"
 
+
+bool conditionality=false;
 ofstream asmOut;
 int stack_offset = 0;
 int label = 0;
@@ -550,6 +552,10 @@ class lpExprRp : public factor {
         // sub->setNextLabel(this->getNextLabel());
         this->copyLabelsToChild(2);
 
+
+ParserNode* pn=this->getSubordinateNth(2);
+        //cout<<"fact (E)"<<" "<<pn->getTrueLabel()<<" "<<pn->getFalseLabel()<<pn->getNextLabel()<<endl;
+
         for (auto x : this->getSubordinate())
         {
             x->processCode(out);
@@ -891,7 +897,7 @@ class simp_relop_simp_relexp:public rel_expression{
         genCode("CMP AX,DX");
 
         cout<<"btrue ,bfalse = "<<btrue<<" "<<bfalse<<endl;
-        if(isConditional()){
+        if(conditionality){
 
         if(btrue!="fall" && bfalse!="fall"){
             genCode("\t"+getJumpInstruction()+" "+btrue);
@@ -906,7 +912,7 @@ class simp_relop_simp_relexp:public rel_expression{
         }
 
         //if not called from if,else,loop
-        if(!isConditional()){
+        if(!conditionality){
 
         string label1=btrue;
         string label2=bfalse;
@@ -931,6 +937,7 @@ class simp_relop_simp_relexp:public rel_expression{
             // printLabel(nextL);
 
         }
+        conditionality=false;
         cout<<"relHandling done"<<endl;
        // push("AX");
 
@@ -948,7 +955,9 @@ class simp_relop_simp_relexp:public rel_expression{
 
 
         cout<<"-------------------------------- simp rel simp called--------------------------------"<<endl;
+        cout<<"is conditional = "<<conditionality<<endl;
         for(auto x:this->getSubordinate()){
+            
             x->processCode(out);
         }
         relHandler();
@@ -1017,7 +1026,13 @@ class rel_logicop_rel : public logic_expression{
     }
 
     void LabelHandler(){
+        // makeChildIsConditional(1);
+        // makeChildIsConditional(3);
         children=this->getSubordinate();
+        // children[0]->conditionality=true;
+        // children[2]->conditionality=true;
+        // children[0]->setConditional();
+        // children[2]->setConditional();
         if(getOperator() =="||"){
             orHandler();
         }
@@ -1026,7 +1041,12 @@ class rel_logicop_rel : public logic_expression{
         }
         children[2]->setNextLabel(getNextLabel());
         children[0]->setNextLabel(getNextLabel());
+        // // cout<<"is conditional----------- "<<children[0]->conditionality<<endl;
+        //  cout<<"is conditional----------- "<<children[2]->conditionality<<endl;
         this->setSubordinate(children);
+        cout<<"after setting isConditionalExp----------- \n";
+        // cout<<"is conditional----------- "<<getSubordinate()[0]->conditionality<<endl;
+        //  cout<<"is conditional----------- "<<getSubordinate()[0]->conditionality<<endl;
     }
 
     void orCoder(){
@@ -1045,6 +1065,18 @@ class rel_logicop_rel : public logic_expression{
     void Coder(){
         if(getOperator() == "&&"){andCoder();}
         if(getOperator() == "||"){orCoder();}
+        if(!conditionality){
+            string label1=this->getTrueLabel();
+            string label2=this->getFalseLabel();
+		    genCode(label1 + ":");
+            string newL=getNewLabel();
+            genCode("\tPUSH 1");
+		    genCode("\tJMP " + newL);
+            genCode(label2 + ":");
+		    genCode("\tPUSH 0");
+		    genCode(newL + ":");
+        }
+        conditionality=false;
     }
 
 
@@ -1056,11 +1088,16 @@ public:
         
     }
     void processCode(ofstream& out){
+        if(getTrueLabel()=="")setTrueLabel(getNewLabel());
+        if(getFalseLabel()=="")setFalseLabel(getNewLabel());
+
 
         LabelHandler();//set inherited labels to children
 
         for(auto x:this->getSubordinate()){
+            conditionality=1;
             x->processCode(out);
+            conditionality=0;
         }
 
         Coder();//extra labels
