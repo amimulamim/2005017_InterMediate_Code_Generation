@@ -1,4 +1,3 @@
-Line# 6: Undeclared variable 'a'
-Line# 7: cc is not defined
-Line# 11: Undeclared variable 'a'
-Line# 11: Undeclared variable 'a'
+Line# 11: cc is not defined
+Line# 20: d is not defined
+Line# 28: e is not defined

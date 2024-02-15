@@ -14,6 +14,15 @@ int stack_offset = 0;
 int label = 1;
 vector<map<string, int>> offsetmap;
 
+void printOffsetMap(){
+    for(int i = 0; i < offsetmap.size();i++){
+        for(auto x : offsetmap[i]){
+            cout<<"("<<x.first<<", "<<x.second<<")"<<"  ";
+        }
+        cout<<endl;
+    }
+}
+
 bool isPrinterCalled = false;
 
 string newLineProc(){
@@ -96,7 +105,7 @@ int getVariableOffset(string vname)
         auto mp = offsetmap[idx];
         auto it=mp.find(vname);
         if(it != mp.end()){
-            cout<<"returning "<<it->second<<" for "<<vname<<endl;
+            //cout<<"returning "<<it->second<<" for "<<vname<<endl;
             return it->second;
         }
         idx--;
@@ -244,9 +253,9 @@ public:
 
                 asmOut << "\tSUB SP," << si->getWidth() << endl;
                 stack_offset += si->getWidth();
-                cout<<"before mapping \n";
+                //cout<<"before mapping \n";
                 addToOffsetMap(si->getName(), stack_offset);
-                cout<<"after mapping \n";
+                //cout<<"after mapping \n";
             }
         }
     }
@@ -263,26 +272,27 @@ class func_definition : public ParserNode
         genCode(func_name + " PROC");
         if (func_name == "main")
         {
-            genCode("\tMOV AX, @DATA");
-            genCode("\tMOV DS, AX");
+            genCode("MOV AX, @DATA");
+            genCode("MOV DS, AX");
         }
-        genCode("\tPUSH BP");
-        genCode("\tMOV BP, SP");
+        genCode("PUSH BP");
+        genCode("MOV BP, SP");
 
         //////////////////
         //////////////////////change after compound_statement,then exclude it
         offsetmap.push_back(map<string, int>());
 
-                    cout << "si = " << *(this->getSymbolInfo()) << endl;
+                    //cout << "si = " << *(this->getSymbolInfo()) << endl;
             params = this->getSymbolInfo()->getParameters();
-            cout << "params: " << params.size() << endl;
+            //cout << "params: " << params.size() << endl;
             int offx=-4;
             ///////////////////////////params upore thake,caller push kore..so -(-) e + hobe
         for(int i=params.size()-1; i>=0; i--)
 {
     string parName=params[i]->getName();
+    cout<<"adding to offset map : "<<parName<<" "<<offx<<" from "<<func_name<<endl;
     addToOffsetMap(parName, offx);
-    cout<<"offx for "<<parName<<" is "<<offx<<endl;
+    //cout<<"offx for "<<parName<<" is "<<offx<<endl;
     offx-=2;
 
 
@@ -315,10 +325,14 @@ class func_definition : public ParserNode
                 genCode("\tRET");
             // genCode("\tRET");
         }
-        genCode(func_name + " ENDP");
+        genCode(func_name + " ENDP\n\n");
 
-        if(stack_offset > 0) offsetmap.pop_back();
-        stack_offset = 0;
+         //if(stack_offset > 0){
+            cout<<"popping for "<<func_name<<endl;
+             offsetmap.pop_back();
+
+        // }
+         stack_offset = 0;
        
     }
 
@@ -346,7 +360,7 @@ class variable: public ParserNode{
 
         
         SymbolInfo* si=this->getSymbolInfo();
-        cout<<"-------------------------------- variable: "<<*si<<endl;
+        //cout<<"-------------------------------- variable: "<<*si<<endl;
         if(si->isArray()){
             if(getVariableOffset(si->getName())==-1){
                 pop("CX");//getting index
@@ -408,15 +422,15 @@ class var_incDec: public factor{
         : factor(firstLine, lastLine, matchedRule, dataType, value)
     {
         op="INC";
-        cout<<"varINCDEC construction\n";
+        //cout<<"varINCDEC construction\n";
     }
     var_incDec* setOperator(string op){
-        cout<<"setOperator = "<<op<<endl;
+        //cout<<"setOperator = "<<op<<endl;
         if(op=="--"){
             this->op="DEC";
         }
         else this->op="INC";
-        cout<<"setOperator done\n";
+        //cout<<"setOperator done\n";
         return this;
     }
     void processCode(ofstream& out){
@@ -427,7 +441,7 @@ class var_incDec: public factor{
         ParserNode* node=getSubordinateNth(1);
         SymbolInfo* sym=node->getSymbolInfo();
 
-        cout<<"operator is : "<<op<<" at line = "<<this->getFirstLine()<<endl;
+        //cout<<"operator is : "<<op<<" at line = "<<this->getFirstLine()<<endl;
 
          if (!sym->isArray()) {
         string address = getVarAddressName(sym->getName());
@@ -471,7 +485,7 @@ class variable_factor:public factor{
 
     ParserNode* var=this->getSubordinateNth(1);
      SymbolInfo* si=var->getSymbolInfo();
-        cout<<"-------------------------------- variable_factor: "<<*si<<endl;
+        //cout<<"-------------------------------- variable_factor: "<<*si<<endl;
         if(si->isArray()){
             if(getVariableOffset(si->getName())==-1){
 
@@ -496,7 +510,7 @@ class variable_factor:public factor{
     // void processCode(ofstream& out){
     //     ParserNode* var=this->getSubordinateNth(1);
     //     SymbolInfo* si=var->getSymbolInfo();
-    //     cout<<"-------------------------------- varFac: "<<*si<<endl;
+    //     //cout<<"-------------------------------- varFac: "<<*si<<endl;
     //     if(si->isArray()){
     //         if(getVariableOffset(si->getName())==-1){
     //             pop("CX");//getting index
@@ -532,14 +546,14 @@ class int_factor : public factor {
          int_factor(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
         : factor(firstLine, lastLine, matchedRule, dataType, value)
     {
-        cout<<"int_factor constructor\n";
+        //cout<<"int_factor constructor\n";
     }
     void processCode(ofstream& out){
 
         //ParserNode* var=this->getSubordinateNth(1);
         
         SymbolInfo* si=this->getSymbolInfo();
-        cout<<" constant "<<*si<<endl;
+        //cout<<" constant "<<*si<<endl;
         out<<"MOV AX,"<<si->getName()<<endl;
         push("AX");
     }
@@ -572,20 +586,20 @@ class funcCall_factor : public factor{
          funcCall_factor(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
         : factor(firstLine, lastLine, matchedRule, dataType, value)
     {
-        //cout<<"funcCall_factor constructor------------------------------\n"<<endl;
+        ////cout<<"funcCall_factor constructor------------------------------\n"<<endl;
     }
     void processCode(ofstream& out){
-        //cout<<"funcCall_factor processCode ----------------------------------------------------------------\n"<<endl;
+        ////cout<<"funcCall_factor processCode ----------------------------------------------------------------\n"<<endl;
         for(auto x : this->getSubordinate()){
             x->processCode(out);
         }
         string name=this->getSymbolInfo()->getName();
-        cout<<" name="<<name<<endl<<endl;
+        //cout<<" name="<<name<<endl<<endl;
         // if(name=="println"){
         //     isPrinterCalled=true;
-        //     cout<<"this is a printer\n"<<endl;
+        //     //cout<<"this is a printer\n"<<endl;
         //     SymbolInfo* info=this->getSubordinateNth(3)->getSymbolInfo();
-        //     cout<<"println info = "<<*info<<endl;
+        //     //cout<<"println info = "<<*info<<endl;
         //     genCode("MOV AX,"+getVarAddressName(info->getName()));
         
 
@@ -593,12 +607,20 @@ class funcCall_factor : public factor{
 
 
         // }
+        cout<<"before calling "<<name<<": ";printOffsetMap();
+      //  offsetmap.push_back(map<string, int>());
         genCode("CALL "+name);
         string retType=this->getSymbolInfo()->getVarType();
-        cout<<"calling f= "<<*this->getSymbolInfo()<<endl;
-       cout<<"rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrtype of   "<<name<<" : "<<retType<<endl;
+        //cout<<"calling f= "<<*this->getSymbolInfo()<<endl;
+       //cout<<"rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrtype of   "<<name<<" : "<<retType<<endl;
        if(retType!="VOID")
         push("AX");//return value pushing
+
+
+        cout<<"after calling "<<name<<": ";printOffsetMap();
+       // if(stack_offset > 0) offsetmap.pop_back();
+       // stack_offset = 0;
+        cout<<"after returning "<<name<<": ";printOffsetMap();
     }
 
 };
@@ -783,7 +805,7 @@ class var_assignop_logic : public expression {
     void assignHandler(ofstream& out){
         pop("AX");
         SymbolInfo* si=this->getSubordinateNth(1)->getSymbolInfo();
-        cout<<"-------------------------------- variable assignop : "<<*si<<endl;
+        //cout<<"-------------------------------- variable assignop : "<<*si<<endl;
         if(si->isArray()){
             if(getVariableOffset(si->getName())==-1){
                 genCode("MOV [SI],AX");
@@ -849,9 +871,9 @@ class printlnCaller: public statement {
         //string name=this->getSymbolInfo()->getName();
 
             isPrinterCalled=true;
-            cout<<"this is a printer\n"<<endl;
+            //cout<<"this is a printer\n"<<endl;
             SymbolInfo* info=this->getSubordinateNth(3)->getSymbolInfo();
-            cout<<"println info = "<<*info<<endl;
+            //cout<<"println info = "<<*info<<endl;
             genCode("MOV AX,"+getVarAddressName(info->getName()));
             genCode("CALL println");
 
