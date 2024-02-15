@@ -18,6 +18,7 @@ class ParserNode{
     SymbolInfo* symbolInfo;
     string trueLabel,falseLabel,nextLabel;
     string op;
+    bool isCond;
 
     public:
     ParserNode(int firstLine, int lastLine,string matchedRule,string dataType="",string value=""){
@@ -28,6 +29,7 @@ class ParserNode{
         this->value = value;
         vector<ParserNode*> children;
         subordinates=children;
+        isCond = false;
         isNonTerminal=false;
         isErrRootPrinted=false;
         isError=false;
@@ -48,6 +50,12 @@ class ParserNode{
         }
 
     }
+bool isConditional(){return isCond;}
+ParserNode* setConditional(){
+    isCond = true;
+    return this;
+}
+
     string getTrueLabel(){
         return trueLabel;
     }

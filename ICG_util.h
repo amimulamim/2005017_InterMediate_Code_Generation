@@ -11,7 +11,7 @@
 
 ofstream asmOut;
 int stack_offset = 0;
-int label = 1;
+int label = 0;
 vector<map<string, int>> offsetmap;
 
 void printOffsetMap(){
@@ -158,9 +158,16 @@ void PrintNewLabel()
 }
 
 string getNewLabel(){
-    string lab= "l"+to_string(label);
+    string lab= "L"+to_string(label);
     label++;
     return lab;
+}
+
+void printLabel(string label,ofstream& out=asmOut){
+    if(label=="fall")return;
+    out<<label<<" :\n";
+
+
 }
 
 void genCode(std::string s,bool tab=true)
@@ -195,7 +202,7 @@ void genStartCode(ParserNode *node, SymbolTable *table)
     string c = ".MODEL SMALL\n\
 .STACK 1000H\n\
 .Data\n\
-number DB \"00000$\"";
+\tnumber DB \"00000$\"";
     asmOut << c << endl;
 
     for (SymbolInfo *info : table->getSymbols())
@@ -303,7 +310,9 @@ class func_definition : public ParserNode
     void funcCompleted()
     {
         string func_name = this->getValue();
-        PrintNewLabel();
+        //PrintNewLabel();
+        printLabel(getNewLabel());
+
         if (stack_offset > 0)
         {
             genCode("\tADD SP, " + to_string(stack_offset));
@@ -507,38 +516,6 @@ class variable_factor:public factor{
         push("AX");
         
     }
-    // void processCode(ofstream& out){
-    //     ParserNode* var=this->getSubordinateNth(1);
-    //     SymbolInfo* si=var->getSymbolInfo();
-    //     //cout<<"-------------------------------- varFac: "<<*si<<endl;
-    //     if(si->isArray()){
-    //         if(getVariableOffset(si->getName())==-1){
-    //             pop("CX");//getting index
-    //             genCode("LEA SI,"+si->getName());
-    //             genCode("SHL CX,1");
-    //             genCode("ADD SI,CX");
-    //             genCode("MOV AX,[SI]");
-
-
-    //         }
-    //         else{
-    //             pop("CX");//getting index
-    //             genCode("SHL CX,1");
-    //             genCode("ADD CX,"+to_string(getVariableOffset(si->getName())));
-    //             genCode("MOV DI,BP");
-    //             genCode("SUB DI,CX");
-    //             genCode("MOV AX,[DI]");
-
-    //         }
-
-    //     }
-    //     else{
-    //         genCode("MOV AX,"+getVarAddressName(si->getName()));
-    //     }
-
-    //     push("AX");
-    // }
-
 
 };
 class int_factor : public factor {
@@ -898,24 +875,61 @@ class simp_relop_simp_relexp:public rel_expression{
     void relHandler(){
         cout<<"relHandler called"<<endl;
         cout<<"operator: "<<getOperator()<<endl;
-        pop("BX");
-        pop("AX");
-        genCode("CMP AX,BX");
+
+
+
+        if(this->getTrueLabel()==""){this->setTrueLabel(getNewLabel());}
+        if(this->getFalseLabel()==""){this->setFalseLabel(getNewLabel());}
+
         string btrue=this->getTrueLabel();
         string bfalse=this->getFalseLabel();
 
 
 
+        pop("DX");
+        pop("AX");
+        genCode("CMP AX,DX");
+
         cout<<"btrue ,bfalse = "<<btrue<<" "<<bfalse<<endl;
+        if(isConditional()){
+
         if(btrue!="fall" && bfalse!="fall"){
-            genCode(getJumpInstruction()+" "+btrue);
-            genCode("JMP "+bfalse);
+            genCode("\t"+getJumpInstruction()+" "+btrue);
+            genCode("\tJMP "+bfalse);
         }
         else if(btrue!="fall"){
-            genCode(getJumpInstruction()+" "+btrue);
+            genCode("\t"+getJumpInstruction()+" "+btrue);
         }
         else if(bfalse!="fall"){
-            genCode(getFalseJumpInstruction()+" "+bfalse);
+            genCode("\t"+getFalseJumpInstruction()+" "+bfalse);
+        }
+        }
+
+        //if not called from if,else,loop
+        if(!isConditional()){
+
+        string label1=btrue;
+        string label2=bfalse;
+        // genCode("\tPOP DX");
+		// genCode("\tPOP AX");
+		// genCode("\tCMP AX, DX");
+		genCode("\t"+getJumpInstruction() +" "+ label1);
+		genCode("\tPUSH 0");
+		genCode("\tJMP " + label2);
+		genCode(label1 + ":");
+		genCode("\tPUSH 1");
+		genCode(label2 + ":");
+
+
+
+            // printLabel(btrue);
+            // push(1);
+            // string nextL=getNewLabel();
+            // genCode("JMP "+nextL);
+            // printLabel(bfalse);
+            // push(0);
+            // printLabel(nextL);
+
         }
         cout<<"relHandling done"<<endl;
        // push("AX");
