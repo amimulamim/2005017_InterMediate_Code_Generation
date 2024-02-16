@@ -1,15 +1,18 @@
-void main(){
-    int a,b;
-    b=0;
-    a=(!b && 1<=5);
-    println(a);
-    if(a>0){
-        a=10;
-     }
-    // //println(a);
-    if(a<0){
-        a=-10;
-    }
+int f(int a){
+    if(a<=1)return 1;
+    return a*f(a-1);
+}
 
-    println(a);
+
+int g(){
+    return 1;
+}
+void main(){
+    int x,y;
+    x=f(4);
+    println(x);
+    x=g();
+    y=x;
+    println(x);
+    println(y);
 }

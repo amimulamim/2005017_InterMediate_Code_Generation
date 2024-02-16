@@ -6,14 +6,18 @@
 #include <cmath>
 #include <vector>
 #include <map>
+#include<stack>
 #include "SymbolTable/SymbolTable.h"
 #include "ParseTree.h"
 
 bool conditionality = false;
+//bool returned = false;
 ofstream asmOut;
 int stack_offset = 0;
 int label = 0;
 vector<map<string, int>> offsetmap;
+stack<string> exitLabel;
+int stack_excess = 0;
 
 void printOffsetMap()
 {
@@ -196,6 +200,7 @@ void push(std::string reg, std::string comment = "")
     {
         cout << " ; " << comment;
     }
+    stack_excess++;
 
     asmOut << endl;
 }
@@ -209,6 +214,7 @@ void push(int val, std::string comment = "")
         cout << " ; " << comment;
     }
     asmOut << endl;
+    stack_excess++;
 }
 
 void pop(std::string reg, std::string comment = "")
@@ -218,6 +224,7 @@ void pop(std::string reg, std::string comment = "")
     if (comment.length() > 0)
         cout << " ; " << comment;
     asmOut << endl;
+    stack_excess--;
 }
 
 void genStartCode(ParserNode *node, SymbolTable *table)
@@ -333,8 +340,14 @@ class func_definition : public ParserNode
     {
         string func_name = this->getValue();
         // PrintNewLabel();
+        //printLabel(func_name+"_Exit");
         printLabel(getNewLabel());
 
+        cout<<"stack excess: -------------------------------- of "<<func_name<<" : "<<stack_excess<<endl;
+        // for(int i=0; i<stack_excess; i++){
+        //     pop("DX");
+        // }
+        stack_excess = 0;
         if (stack_offset > 0)
         {
             genCode("ADD SP, " + to_string(stack_offset));
@@ -483,7 +496,8 @@ public:
         {
             string address = getVarAddressName(sym->getName());
             genCode("MOV AX, " + address);
-            genCode("PUSH AX");
+            //genCode("PUSH AX");
+            push("AX");
             genCode(op + " W." + address);
         }
         else
@@ -494,7 +508,7 @@ public:
             {
 
                 genCode("MOV AX, [SI]");
-                genCode("PUSH AX");
+                 push("AX");
                 genCode(op + " W.[SI]");
             }
             else
@@ -502,7 +516,7 @@ public:
                 // element of some local array, index is in CX
 
                 genCode("MOV AX, [DI]");
-                genCode("PUSH AX");
+                 push("AX");
                 genCode(op + " W.[DI]");
             }
         }
@@ -611,8 +625,10 @@ public:
         string retType = this->getSymbolInfo()->getVarType();
         // cout<<"calling f= "<<*this->getSymbolInfo()<<endl;
         // cout<<"rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrtype of   "<<name<<" : "<<retType<<endl;
-        if (retType != "VOID")
-            push("AX"); // return value pushing
+        if (retType != "VOID" )
+           { push("AX"); // return value pushing
+           // returned=false;
+           }
     }
 };
 
@@ -686,15 +702,16 @@ public:
         // genCode("PUSH 0");
         // genCode(label2 + ":");
 
-        genCode("POP AX");
+        //genCode("POP AX");
+        pop("AX");
         genCode("CMP AX, 0");
         if (!conditionality)
         {
             genCode("JNE " + label1);
-            genCode("PUSH 1");
+             push(1);
             genCode("JMP " + label2);
             genCode(label1 + ":",false);
-            genCode("PUSH 0");
+            push(0);
             genCode(label2 + ":",false);
         }
         else
@@ -1009,10 +1026,11 @@ class simp_relop_simp_relexp : public rel_expression
             // genCode("POP AX");
             // genCode("CMP AX, DX");
             genCode("" + getJumpInstruction() + " " + label1);
-            genCode("PUSH 0");
+           // genCode("PUSH 0");
+           push(0);
             genCode("JMP " + label2);
             genCode(label1 + ":",false);
-            genCode("PUSH 1");
+            push(1);
             genCode(label2 + ":",false);
 
             // printLabel(btrue);
@@ -1174,10 +1192,11 @@ class rel_logicop_rel : public logic_expression
             string label2 = this->getFalseLabel();
             genCode(label1 + ":",false);
             string newL = getNewLabel();
-            genCode("PUSH 1");
+           // genCode("PUSH 1");
+           push(1);
             genCode("JMP " + newL);
             genCode(label2 + ":",false);
-            genCode("PUSH 0");
+            push(0);
             genCode(newL + ":",false);
         }
         // conditionality = false;
@@ -1238,11 +1257,15 @@ public:
     }
 
     void processCode(ofstream &out)
-    {
+    {   
+        string prevNext=getNextLabel();
         if (getNextLabel() == "")
         {
-            //  cout<<"--------------------------------settting new label for compound statement..."<<endl;
+            cout<<"--------------------------------settting new label for compound statement..."<<endl;
             this->setNextLabel(getNewLabel());
+            cout<<"--------------------------------exitLabel pushing : "<<getNextLabel()<<endl;
+            exitLabel.push(this->getNextLabel());
+            cout<<"--------------------------------exitLabel pushing test: "<<exitLabel.top()<<endl;
         }
         // ParserNode* p=getSubordinateNth(2);
         // p->setNextLabel(getNextLabel());
@@ -1252,6 +1275,10 @@ public:
         for (auto x : this->getSubordinate())
         {
             x->processCode(out);
+        }
+        if(prevNext==""){
+            exitLabel.pop();
+            genCode(this->getNextLabel()+":\n",false);
         }
     }
 };
@@ -1345,5 +1372,71 @@ public:
             i++;
             conditionality = false;
         }
+    }
+};
+
+class if_else_statement : public statement{
+    public:
+    if_else_statement(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
+        : statement(firstLine, lastLine, matchedRule, dataType, value)
+    {
+    }
+
+    void processCode(ofstream &out)
+    {
+        this->setLabelsToChild(5, "", "", this->getNextLabel());
+        this->setLabelsToChild(7, "", "", this->getNextLabel());
+
+        this->setLabelsToChild(3, "fall", getNewLabel(), "");
+
+        string btrue,bfalse;
+
+        int i = 0;
+        for (auto x : this->getSubordinate())
+        {
+            if (i == 2)
+            {
+                conditionality = true;
+                btrue=x->getTrueLabel();
+                bfalse=x->getFalseLabel();
+            }
+
+            cout << x->getRule() << " LINE: " << x->getFirstLine() << x->getTrueLabel() << " " << x->getFalseLabel() << " " << x->getNextLabel() << endl;
+
+            x->processCode(out);
+
+            if(i==4){
+                genCode("JMP "+x->getNextLabel());
+                genCode(bfalse+":\n",false);
+            }
+
+            i++;
+            conditionality = false;
+        }
+    }
+};
+
+class return_statement : public statement {
+
+    public:
+    return_statement(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
+        : statement(firstLine, lastLine, matchedRule, dataType, value)
+    {
+    }
+    void processCode(ofstream& out){
+        for(auto x: this->getSubordinate()){
+            x->processCode(out);
+        }
+        pop("AX");
+        string to_exit = "";
+        cout<<"--exit Label size = "<<exitLabel.size()<<endl;
+        if(exitLabel.size() > 0){
+         to_exit=exitLabel.top();
+         //exitLabel.pop();
+         cout<<" assigned to exit to :  "<<to_exit<<endl;
+        }
+        
+        //returned=true;
+        genCode("JMP "+to_exit);
     }
 };

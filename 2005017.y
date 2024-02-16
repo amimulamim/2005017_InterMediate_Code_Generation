@@ -427,6 +427,14 @@ if_statement* new_if_statement(YYLTYPE location, const std::string rule,string d
 return (new if_statement(location.first_line,location.last_line,rule,datatype,value));
 }
 
+if_else_statement* new_if_else_statement(YYLTYPE location, const std::string rule,string datatype="",string value=""){
+return (new if_else_statement(location.first_line,location.last_line,rule,datatype,value));
+}
+
+return_statement* new_return_statement(YYLTYPE location, const std::string rule,string datatype="",string value=""){
+return (new return_statement(location.first_line,location.last_line,rule,datatype,value));
+}
+
 // logic_expression_expression* new_logic_expression_expression(YYLTYPE location, const std::string rule,string datatype="",string value=""){
 // return (new logic_expression_expression(location.first_line,location.last_line,rule,datatype,value));
 // }
@@ -901,7 +909,7 @@ parameter_list  : parameter_list COMMA type_specifier ID{
 	  | IF LPAREN expression RPAREN statement ELSE statement{
       string rule="statement : IF LPAREN expression RPAREN statement ELSE statement";
       logRule(rule);
-      $$=parsing(@$,rule)->addSubordinate(parsing(@1,IF_R))->addSubordinate(parsing(@2,LPAREN_R))->addSubordinate($3)->addSubordinate(parsing(@4,RPAREN_R))->addSubordinate($5);
+      $$=new_if_else_statement(@$,rule)->addSubordinate(parsing(@1,IF_R))->addSubordinate(parsing(@2,LPAREN_R))->addSubordinate($3)->addSubordinate(parsing(@4,RPAREN_R))->addSubordinate($5);
       $$->addSubordinate(parsing(@6,ELSE_R))->addSubordinate($7);
     }
 	  | WHILE LPAREN expression RPAREN statement{
@@ -925,7 +933,7 @@ parameter_list  : parameter_list COMMA type_specifier ID{
 	  | RETURN expression SEMICOLON{
       string rule="statement : RETURN expression SEMICOLON";
       logRule(rule);
-      $$=parsing(@$,rule)->addSubordinate(parsing(@1,RET_R))->addSubordinate($2)->addSubordinate(parsing(@3,SEMICOLON_R));
+      $$=new_return_statement(@$,rule)->addSubordinate(parsing(@1,RET_R))->addSubordinate($2)->addSubordinate(parsing(@3,SEMICOLON_R));
     }
 	  ;
 
