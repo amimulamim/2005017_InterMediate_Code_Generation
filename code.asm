@@ -3,110 +3,132 @@
 .Data
 	number DB "00000$"
 .CODE
-f PROC
-	PUSH BP
-	MOV BP, SP
-;--------------------------------; LINE 2
-	MOV AX,[BP+4]
-	PUSH AX
-	MOV AX, 1
-	PUSH AX
-	POP DX
-	POP AX
-	CMP AX, DX
-	JG L1
-	MOV AX, 1
-	PUSH AX
-	POP AX
-	JMP L0
-L1:
-;--------------------------------; LINE 3
-	MOV AX,[BP+4]
-	PUSH AX
-	MOV AX,[BP+4]
-	PUSH AX
-	MOV AX, 1
-	PUSH AX
-	POP BX
-	POP AX
-	SUB AX,BX
-	PUSH AX
-	CALL f
-	PUSH AX
-	POP BX
-	POP AX
-	IMUL BX
-	PUSH AX
-	POP AX
-	JMP L0
-L0:
-
-L2:
-	POP BP
-	RET 2
-	f ENDP
-
-
-g PROC
-	PUSH BP
-	MOV BP, SP
-;--------------------------------; LINE 8
-	MOV AX, 1
-	PUSH AX
-	POP AX
-	JMP L3
-L3:
-
-L4:
-	POP BP
-	RET
-	g ENDP
-
-
 main PROC
 	MOV AX, @DATA
 	MOV DS, AX
 	PUSH BP
 	MOV BP, SP
-;--------------------------------; LINE 11
+;--------------------------------; LINE 2
 	SUB SP,2
 	SUB SP,2
+	SUB SP,6
+L6:
+;--------------------------------; LINE 3
+	MOV AX, 1
+	PUSH AX
+	MOV AX, 2
+	PUSH AX
+	MOV AX, 3
+	PUSH AX
+	POP BX
+	POP AX
+	ADD AX,BX
+	PUSH AX
+	POP BX
+	POP AX
+	IMUL BX
+	PUSH AX
+	MOV AX, 3
+	PUSH AX
+	POP BX
+	POP AX
+	CWD
+	IDIV BX
+	MOV AX, DX
+	PUSH AX
+	POP AX
+	MOV [BP-2],AX
+L5:
+;--------------------------------; LINE 4
+	MOV AX, 1
+	PUSH AX
+	MOV AX, 5
+	PUSH AX
+	POP DX
+	POP AX
+	CMP AX, DX
+	JL L11
+	PUSH 0
+	JMP L12
 L11:
-;--------------------------------; LINE 12
-	MOV AX, 4
-	PUSH AX
-	CALL f
-	PUSH AX
-	POP AX
-	MOV [BP-2],AX
-L10:
-;--------------------------------; LINE 13
-	MOV AX,[BP-2]
-	CALL println
-L9:
-;--------------------------------; LINE 14
-	CALL g
-	PUSH AX
-	POP AX
-	MOV [BP-2],AX
-L8:
-;--------------------------------; LINE 15
-	MOV AX,[BP-2]
-	PUSH AX
+	PUSH 1
+L12:
 	POP AX
 	MOV [BP-4],AX
-L7:
-;--------------------------------; LINE 16
+L4:
+;--------------------------------; LINE 5
+	MOV AX, 2
+	PUSH AX
+	MOV AX, 0
+	PUSH AX
+	POP CX
+	SHL CX,1
+	ADD CX,10
+	MOV DI,BP
+	SUB DI,CX
+	POP AX
+	MOV [DI], AX
+L3:
+;--------------------------------; LINE 6
+	MOV AX,[BP-2]
+	PUSH AX
+	;conditionality of simple exp
+	POP AX
+	CMP AX, 0
+	JE L17
+	MOV AX,[BP-4]
+	PUSH AX
+	POP AX
+	CMP AX, 0
+	JNE L19
+	JE L18
+	;conditionality of simple exp
+	POP AX
+	CMP AX, 0
+	JE L17
+	MOV AX, 0
+	PUSH AX
+	POP CX
+	SHL CX,1
+	ADD CX,10
+	MOV DI,BP
+	SUB DI,CX
+	MOV AX, [DI]
+	PUSH AX
+	INC W.[DI]
+	JMP L2
+L17:
+
+	MOV AX, 0
+	PUSH AX
+	POP CX
+	SHL CX,1
+	ADD CX,10
+	MOV DI,BP
+	SUB DI,CX
+	MOV AX,[DI]
+	PUSH AX
+	MOV AX, 1
+	PUSH AX
+	POP CX
+	SHL CX,1
+	ADD CX,10
+	MOV DI,BP
+	SUB DI,CX
+	POP AX
+	MOV [DI], AX
+L2:
+;--------------------------------; LINE 10
 	MOV AX,[BP-2]
 	CALL println
-L6:
-;--------------------------------; LINE 17
+L1:
+;--------------------------------; LINE 11
 	MOV AX,[BP-4]
 	CALL println
-L5:
+L0:
 
-L12:
-	ADD SP, 4
+L30:
+	ADD SP, 10
 	POP BP
 	MOV AX, 4CH
 	INT 21H
