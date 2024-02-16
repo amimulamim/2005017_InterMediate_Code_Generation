@@ -53,7 +53,9 @@ public:
         // If found is not equal to std::string::npos, it means "error" was found
     }
     ~ParserNode()
-    {
+    {   
+
+        cout <<endl<< "--------------------------------destructor--------------------------------" << endl<< endl;
         for (auto p : subordinates)
         {
             delete p;
@@ -87,7 +89,7 @@ public:
     ParserNode *setNextLabel(string label)
     {
         this->nextLabel = label;
-        if (this->nextLabel != "")
+        
             // cout<<"setNextLabel to "<<this->nextLabel<<" for "<<this->getRule()<<" at line "<<firstLine<<endl;
             return this;
     }
@@ -286,6 +288,19 @@ public:
         subordinates[n - 1]->setFalseLabel(trueLabel);
 
         return this;
+    }
+
+    ParserNode *setLabelsToChild(int n,string t,string f,string nl){
+            if (n > subordinates.size())
+            return this;
+            if(!t.empty())
+            subordinates[n - 1]->setTrueLabel(t);
+            if(!f.empty())
+            subordinates[n - 1]->setFalseLabel(f);
+            if(!nl.empty())
+            subordinates[n - 1]->setNextLabel(nl);
+            return this;
+
     }
 
 };

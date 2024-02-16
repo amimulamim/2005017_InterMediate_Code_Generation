@@ -9,26 +9,30 @@
 #include "SymbolTable/SymbolTable.h"
 #include "ParseTree.h"
 
-
-bool conditionality=false;
+bool conditionality = false;
 ofstream asmOut;
 int stack_offset = 0;
 int label = 0;
 vector<map<string, int>> offsetmap;
 
-void printOffsetMap(){
-    for(int i = 0; i < offsetmap.size();i++){
-        for(auto x : offsetmap[i]){
-            cout<<"("<<x.first<<", "<<x.second<<")"<<"  ";
+void printOffsetMap()
+{
+    for (int i = 0; i < offsetmap.size(); i++)
+    {
+        for (auto x : offsetmap[i])
+        {
+            cout << "(" << x.first << ", " << x.second << ")"
+                 << "  ";
         }
-        cout<<endl;
+        cout << endl;
     }
 }
 
 bool isPrinterCalled = false;
 
-string newLineProc(){
-        std::string assemblyCode = R"(
+string newLineProc()
+{
+    std::string assemblyCode = R"(
 new_line proc
     push ax
     push dx
@@ -45,8 +49,9 @@ new_line endp
 )";
     return assemblyCode;
 }
-string printlnProc(){
-    string assemblyCode =R"(println proc  ;print what is in ax
+string printlnProc()
+{
+    string assemblyCode = R"(println proc  ;print what is in ax
     push ax
     push bx
     push cx
@@ -89,12 +94,12 @@ string printlnProc(){
 }
 
 void addToOffsetMap(string v, int offs)
-{   
-    if (offsetmap.empty()) {
+{
+    if (offsetmap.empty())
+    {
         offsetmap.push_back(map<string, int>());
     }
     int idx = offsetmap.size() - 1;
-
 
     offsetmap[idx].insert(make_pair(v, offs));
 }
@@ -105,9 +110,10 @@ int getVariableOffset(string vname)
     while (idx >= 0)
     {
         auto mp = offsetmap[idx];
-        auto it=mp.find(vname);
-        if(it != mp.end()){
-            //cout<<"returning "<<it->second<<" for "<<vname<<endl;
+        auto it = mp.find(vname);
+        if (it != mp.end())
+        {
+            // cout<<"returning "<<it->second<<" for "<<vname<<endl;
             return it->second;
         }
         idx--;
@@ -115,10 +121,12 @@ int getVariableOffset(string vname)
     return -1;
 }
 
-string getVarAddressName(string vname){
+string getVarAddressName(string vname)
+{
     int offset = getVariableOffset(vname);
-    if(offset == -1)return vname;
-     return "[BP" + (offset ? ((offset > 0 ? "-" : "+") + to_string(abs(offset))) : "") + "]";
+    if (offset == -1)
+        return vname;
+    return "[BP" + (offset ? ((offset > 0 ? "-" : "+") + to_string(abs(offset))) : "") + "]";
 }
 
 std::string trim(const std::string &str)
@@ -159,44 +167,58 @@ void PrintNewLabel()
     asmOut << "Label" << label++ << " : " << endl;
 }
 
-string getNewLabel(){
-    string lab= "L"+to_string(label);
+string getNewLabel()
+{
+    string lab = "L" + to_string(label);
     label++;
     return lab;
 }
 
-void printLabel(string label,ofstream& out=asmOut){
-    if(label=="fall")return;
-    out<<label<<" :\n";
-
-
+void printLabel(string label, ofstream &out = asmOut)
+{
+    if (label == "fall")
+        return;
+    out << label << " :\n";
 }
 
-void genCode(std::string s,bool tab=true)
-{   
-    if(tab)asmOut << "\t";
+void genCode(std::string s, bool tab = true)
+{
+    if (tab)
+        asmOut << "\t";
     asmOut << s << endl;
 }
 
-void push(std::string reg,std::string comment=""){
-    asmOut << "\t" << "PUSH " << reg ;
-    if(comment.length()>0){cout<<" ; " << comment ;}
-    
-    asmOut<< endl;
+void push(std::string reg, std::string comment = "")
+{
+    asmOut << "\t"
+           << "PUSH " << reg;
+    if (comment.length() > 0)
+    {
+        cout << " ; " << comment;
+    }
+
+    asmOut << endl;
 }
 
-void push(int val,std::string comment=""){
-    asmOut << "\t" << "PUSH " << val;
-    if(comment.length()>0){cout<<" ; " << comment ;}
-    asmOut<< endl;
+void push(int val, std::string comment = "")
+{
+    asmOut << "\t"
+           << "PUSH " << val;
+    if (comment.length() > 0)
+    {
+        cout << " ; " << comment;
+    }
+    asmOut << endl;
 }
 
-void pop(std::string reg,std::string comment=""){
-    asmOut << "\t" << "POP " << reg ;
-    if(comment.length()>0)cout<<" ; " << comment ;
-    asmOut<< endl;
+void pop(std::string reg, std::string comment = "")
+{
+    asmOut << "\t"
+           << "POP " << reg;
+    if (comment.length() > 0)
+        cout << " ; " << comment;
+    asmOut << endl;
 }
-
 
 void genStartCode(ParserNode *node, SymbolTable *table)
 {
@@ -228,10 +250,11 @@ void genStartCode(ParserNode *node, SymbolTable *table)
     asmOut << ".CODE\n";
 
     node->processCode(asmOut);
-    
-    if(isPrinterCalled){
-        asmOut <<newLineProc()<<endl;
-        asmOut <<printlnProc()<<endl;
+
+    if (isPrinterCalled)
+    {
+        asmOut << newLineProc() << endl;
+        asmOut << printlnProc() << endl;
     }
     asmOut << "END main\n";
     asmOut.close();
@@ -262,9 +285,9 @@ public:
 
                 asmOut << "\tSUB SP," << si->getWidth() << endl;
                 stack_offset += si->getWidth();
-                //cout<<"before mapping \n";
+                // cout<<"before mapping \n";
                 addToOffsetMap(si->getName(), stack_offset);
-                //cout<<"after mapping \n";
+                // cout<<"after mapping \n";
             }
         }
     }
@@ -273,12 +296,13 @@ public:
 /// @func_definition ///////////////////////////////////////
 
 class func_definition : public ParserNode
-{   
-    vector<SymbolInfo*> params;
+{
+    vector<SymbolInfo *> params;
     void genFunctioninitCode()
     {
         string func_name = this->getValue();
-        genCode(func_name + " PROC");
+        genCode(func_name + " PROC", false);
+        // asmOut<<func_name<<" PROC"<<endl;
         if (func_name == "main")
         {
             genCode("MOV AX, @DATA");
@@ -291,28 +315,24 @@ class func_definition : public ParserNode
         //////////////////////change after compound_statement,then exclude it
         offsetmap.push_back(map<string, int>());
 
-                    //cout << "si = " << *(this->getSymbolInfo()) << endl;
-            params = this->getSymbolInfo()->getParameters();
-            //cout << "params: " << params.size() << endl;
-            int offx=-4;
-            ///////////////////////////params upore thake,caller push kore..so -(-) e + hobe
-        for(int i=params.size()-1; i>=0; i--)
-{
-    string parName=params[i]->getName();
-    //cout<<"adding to offset map : "<<parName<<" "<<offx<<" from "<<func_name<<endl;
-    addToOffsetMap(parName, offx);
-    //cout<<"offx for "<<parName<<" is "<<offx<<endl;
-    offx-=2;
-
-
-
-}
-
+        // cout << "si = " << *(this->getSymbolInfo()) << endl;
+        params = this->getSymbolInfo()->getParameters();
+        // cout << "params: " << params.size() << endl;
+        int offx = -4;
+        ///////////////////////////params upore thake,caller push kore..so -(-) e + hobe
+        for (int i = params.size() - 1; i >= 0; i--)
+        {
+            string parName = params[i]->getName();
+            // cout<<"adding to offset map : "<<parName<<" "<<offx<<" from "<<func_name<<endl;
+            addToOffsetMap(parName, offx);
+            // cout<<"offx for "<<parName<<" is "<<offx<<endl;
+            offx -= 2;
+        }
     }
     void funcCompleted()
     {
         string func_name = this->getValue();
-        //PrintNewLabel();
+        // PrintNewLabel();
         printLabel(getNewLabel());
 
         if (stack_offset > 0)
@@ -329,8 +349,8 @@ class func_definition : public ParserNode
 
         else
         {
-  
-    if (params.size() != 0)
+
+            if (params.size() != 0)
                 genCode("\tRET " + to_string(params.size() * 2));
             else
                 genCode("\tRET");
@@ -338,13 +358,12 @@ class func_definition : public ParserNode
         }
         genCode(func_name + " ENDP\n\n");
 
-         //if(stack_offset > 0){
-          //  cout<<"popping for "<<func_name<<endl;
-             offsetmap.pop_back();
+        // if(stack_offset > 0){
+        //   cout<<"popping for "<<func_name<<endl;
+        offsetmap.pop_back();
 
         // }
-         stack_offset = 0;
-       
+        stack_offset = 0;
     }
 
 public:
@@ -365,586 +384,634 @@ public:
     }
 };
 
-class variable: public ParserNode{
+class variable : public ParserNode
+{
 
-    void varHandler(ofstream& out){
+    void varHandler(ofstream &out)
+    {
 
-        
-        SymbolInfo* si=this->getSymbolInfo();
-        //cout<<"-------------------------------- variable: "<<*si<<endl;
-        if(si->isArray()){
-            if(getVariableOffset(si->getName())==-1){
-                pop("CX");//getting index
-                genCode("LEA SI,"+si->getName());
+        SymbolInfo *si = this->getSymbolInfo();
+        // cout<<"-------------------------------- variable: "<<*si<<endl;
+        if (si->isArray())
+        {
+            if (getVariableOffset(si->getName()) == -1)
+            {
+                pop("CX"); // getting index
+                genCode("LEA SI," + si->getName());
                 genCode("SHL CX,1");
                 genCode("ADD SI,CX");
-               // genCode("MOV AX,[SI]");
-
-
+                // genCode("MOV AX,[SI]");
             }
-            else{
-                pop("CX");//getting index
+            else
+            {
+                pop("CX"); // getting index
                 genCode("SHL CX,1");
-                genCode("ADD CX,"+to_string(getVariableOffset(si->getName())));
+                genCode("ADD CX," + to_string(getVariableOffset(si->getName())));
                 genCode("MOV DI,BP");
                 genCode("SUB DI,CX");
-                //genCode("MOV AX,[DI]");
-
+                // genCode("MOV AX,[DI]");
             }
-
         }
-        else{
-            //genCode("MOV AX,"+getVarAddressName(si->getName()));
+        else
+        {
+            // genCode("MOV AX,"+getVarAddressName(si->getName()));
         }
 
-       // push("AX");
-
+        // push("AX");
     }
 
-    public:
-        variable(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
+public:
+    variable(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
         : ParserNode(firstLine, lastLine, matchedRule, dataType, value)
     {
     }
-    void processCode(ofstream& out){
+    void processCode(ofstream &out)
+    {
 
-            for(auto x:this->getSubordinate()){
-                x->processCode(out);
-
-            }
-            varHandler(out);
-        
+        for (auto x : this->getSubordinate())
+        {
+            x->processCode(out);
+        }
+        varHandler(out);
     }
 };
 
-
-class factor: public ParserNode{
-     public:
-        factor(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
+class factor : public ParserNode
+{
+public:
+    factor(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
         : ParserNode(firstLine, lastLine, matchedRule, dataType, value)
     {
     }
 };
 
-class var_incDec: public factor{
-        public:
-        string op;
-        var_incDec(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
+class var_incDec : public factor
+{
+public:
+    string op;
+    var_incDec(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
         : factor(firstLine, lastLine, matchedRule, dataType, value)
     {
-        op="INC";
-        //cout<<"varINCDEC construction\n";
+        op = "INC";
+        // cout<<"varINCDEC construction\n";
     }
-    var_incDec* setOperator(string op){
-        //cout<<"setOperator = "<<op<<endl;
-        if(op=="--"){
-            this->op="DEC";
+    var_incDec *setOperator(string op)
+    {
+        // cout<<"setOperator = "<<op<<endl;
+        if (op == "--")
+        {
+            this->op = "DEC";
         }
-        else this->op="INC";
-        //cout<<"setOperator done\n";
+        else
+            this->op = "INC";
+        // cout<<"setOperator done\n";
         return this;
     }
-    void processCode(ofstream& out){
-        for(auto x:this->getSubordinate()){
+    void processCode(ofstream &out)
+    {
+        for (auto x : this->getSubordinate())
+        {
             x->processCode(out);
         }
 
-        ParserNode* node=getSubordinateNth(1);
-        SymbolInfo* sym=node->getSymbolInfo();
+        ParserNode *node = getSubordinateNth(1);
+        SymbolInfo *sym = node->getSymbolInfo();
 
-        //cout<<"operator is : "<<op<<" at line = "<<this->getFirstLine()<<endl;
+        // cout<<"operator is : "<<op<<" at line = "<<this->getFirstLine()<<endl;
 
-         if (!sym->isArray()) {
-        string address = getVarAddressName(sym->getName());
-        genCode("MOV AX, " + address);
-        genCode("PUSH AX");
-        genCode(op + " W." + address);
-    } else {
-        int offset=getVariableOffset(sym->getName());
-        
-        if (offset == -1) {
-           
-            genCode("MOV AX, [SI]");
+        if (!sym->isArray())
+        {
+            string address = getVarAddressName(sym->getName());
+            genCode("MOV AX, " + address);
             genCode("PUSH AX");
-            genCode(op + " W.[SI]");
-        } else {
-            // element of some local array, index is in CX
-           
-            genCode("MOV AX, [DI]");
-            genCode("PUSH AX");
-            genCode(op + " W.[DI]");
+            genCode(op + " W." + address);
+        }
+        else
+        {
+            int offset = getVariableOffset(sym->getName());
+
+            if (offset == -1)
+            {
+
+                genCode("MOV AX, [SI]");
+                genCode("PUSH AX");
+                genCode(op + " W.[SI]");
+            }
+            else
+            {
+                // element of some local array, index is in CX
+
+                genCode("MOV AX, [DI]");
+                genCode("PUSH AX");
+                genCode(op + " W.[DI]");
+            }
         }
     }
-
-    }
-
-
-
-
 };
-class variable_factor:public factor{
-    public:
-         variable_factor(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
+class variable_factor : public factor
+{
+public:
+    variable_factor(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
         : factor(firstLine, lastLine, matchedRule, dataType, value)
     {
-        
     }
-    void processCode(ofstream& out){
-        for(auto x: this->getSubordinate()){
+    void processCode(ofstream &out)
+    {
+        for (auto x : this->getSubordinate())
+        {
             x->processCode(out);
         }
 
-    ParserNode* var=this->getSubordinateNth(1);
-     SymbolInfo* si=var->getSymbolInfo();
-        //cout<<"-------------------------------- variable_factor: "<<*si<<endl;
-        if(si->isArray()){
-            if(getVariableOffset(si->getName())==-1){
+        ParserNode *var = this->getSubordinateNth(1);
+        SymbolInfo *si = var->getSymbolInfo();
+        // cout<<"-------------------------------- variable_factor: "<<*si<<endl;
+        if (si->isArray())
+        {
+            if (getVariableOffset(si->getName()) == -1)
+            {
 
                 genCode("MOV AX,[SI]");
-
-
             }
-            else{
-              
+            else
+            {
+
                 genCode("MOV AX,[DI]");
-
             }
-
         }
-        else{
-            genCode("MOV AX,"+getVarAddressName(si->getName()));
+        else
+        {
+            genCode("MOV AX," + getVarAddressName(si->getName()));
         }
 
         push("AX");
-        
     }
-
 };
-class int_factor : public factor {
-        public:
-         int_factor(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
+class int_factor : public factor
+{
+public:
+    int_factor(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
         : factor(firstLine, lastLine, matchedRule, dataType, value)
     {
-        //cout<<"int_factor constructor\n";
+        // cout<<"int_factor constructor\n";
     }
-    void processCode(ofstream& out){
+    void processCode(ofstream &out)
+    {
 
-        //ParserNode* var=this->getSubordinateNth(1);
-        
-        SymbolInfo* si=this->getSymbolInfo();
-        //cout<<" constant "<<*si<<endl;
-        out<<"MOV AX,"<<si->getName()<<endl;
+        // ParserNode* var=this->getSubordinateNth(1);
+
+        SymbolInfo *si = this->getSymbolInfo();
+        // cout<<" constant "<<*si<<endl;
+        out << "\tMOV AX, " << si->getName() << endl;
         push("AX");
     }
 };
 
-class lpExprRp : public factor {
-       public:
-         lpExprRp(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
+class lpExprRp : public factor
+{
+public:
+    lpExprRp(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
         : factor(firstLine, lastLine, matchedRule, dataType, value)
     {
-        
     }
-    void processCode(ofstream& out){
+    void processCode(ofstream &out)
+    {
         // ParserNode* sub=this->getSubordinateNth(2);
         // sub->setTrueLabel(this->getTrueLabel());
         // sub->setFalseLabel(this->getFalseLabel());
         // sub->setNextLabel(this->getNextLabel());
         this->copyLabelsToChild(2);
 
-
-ParserNode* pn=this->getSubordinateNth(2);
-        //cout<<"fact (E)"<<" "<<pn->getTrueLabel()<<" "<<pn->getFalseLabel()<<pn->getNextLabel()<<endl;
+        ParserNode *pn = this->getSubordinateNth(2);
+        // cout<<"fact (E)"<<" "<<pn->getTrueLabel()<<" "<<pn->getFalseLabel()<<pn->getNextLabel()<<endl;
 
         for (auto x : this->getSubordinate())
         {
             x->processCode(out);
         }
-
-
     }
-
 };
-class funcCall_factor : public factor{
-     public:
-         funcCall_factor(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
+class funcCall_factor : public factor
+{
+public:
+    funcCall_factor(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
         : factor(firstLine, lastLine, matchedRule, dataType, value)
     {
         ////cout<<"funcCall_factor constructor------------------------------\n"<<endl;
     }
-    void processCode(ofstream& out){
+    void processCode(ofstream &out)
+    {
         ////cout<<"funcCall_factor processCode ----------------------------------------------------------------\n"<<endl;
-        for(auto x : this->getSubordinate()){
+        for (auto x : this->getSubordinate())
+        {
             x->processCode(out);
         }
-        string name=this->getSymbolInfo()->getName();
+        string name = this->getSymbolInfo()->getName();
 
-        genCode("CALL "+name);
-        string retType=this->getSymbolInfo()->getVarType();
-        //cout<<"calling f= "<<*this->getSymbolInfo()<<endl;
-       //cout<<"rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrtype of   "<<name<<" : "<<retType<<endl;
-       if(retType!="VOID")
-        push("AX");//return value pushing
+        genCode("CALL " + name);
+        string retType = this->getSymbolInfo()->getVarType();
+        // cout<<"calling f= "<<*this->getSymbolInfo()<<endl;
+        // cout<<"rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrtype of   "<<name<<" : "<<retType<<endl;
+        if (retType != "VOID")
+            push("AX"); // return value pushing
     }
-
 };
 
-class unary_expression : public ParserNode{
-       public:
-         unary_expression(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
+class unary_expression : public ParserNode
+{
+public:
+    unary_expression(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
         : ParserNode(firstLine, lastLine, matchedRule, dataType, value)
     {
-        
     }
 };
 
-class addop_unary : public unary_expression{
-       public:
-         addop_unary(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
+class addop_unary : public unary_expression
+{
+public:
+    addop_unary(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
         : unary_expression(firstLine, lastLine, matchedRule, dataType, value)
     {
-        
     }
-    void processCode(ofstream& out){
+    void processCode(ofstream &out)
+    {
         copyLabelsToChild(2);
-           for(auto x : this->getSubordinate()){
+        for (auto x : this->getSubordinate())
+        {
             x->processCode(out);
         }
 
-        if(this->getOperator() =="-"){
+        if (this->getOperator() == "-")
+        {
             pop("AX");
             genCode("NEG AX");
             push("AX");
-
         }
     }
-
-
-
 };
 
-class not_unary : public unary_expression {
-          public:
-         not_unary(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
+class not_unary : public unary_expression
+{
+public:
+    not_unary(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
         : unary_expression(firstLine, lastLine, matchedRule, dataType, value)
     {
-        
     }
-    void processCode(ofstream& out){
+    void processCode(ofstream &out)
+    {
         this->copyOppositeLabelsToChild(2);
-           for(auto x : this->getSubordinate()){
+        for (auto x : this->getSubordinate())
+        {
             x->processCode(out);
         }
 
-        if(this->getTrueLabel()==""){this->setTrueLabel(getNewLabel());}
-        if(this->getFalseLabel()==""){this->setFalseLabel(getNewLabel());}
-           // pop("AX");
-            string label1=getFalseLabel();
-             string label2=getTrueLabel();
+        if (this->getTrueLabel() == "")
+        {
+            this->setTrueLabel(getNewLabel());
+        }
+        if (this->getFalseLabel() == "")
+        {
+            this->setFalseLabel(getNewLabel());
+        }
+        // pop("AX");
+        string label1 = getFalseLabel();
+        string label2 = getTrueLabel();
 
         //      		genCode("\tPOP AX");  ///////////////////this is kept as backup
-		// genCode("\tCMP AX, 0");
-		// genCode("\tJNE " + label1);
+        // genCode("\tCMP AX, 0");
+        // genCode("\tJNE " + label1);
 
-        
-		// genCode("\tPUSH 1");
-		// genCode("\tJMP " + label2);
-		// genCode(label1 + ":");
-		// genCode("\tPUSH 0");
-		// genCode(label2 + ":");
+        // genCode("\tPUSH 1");
+        // genCode("\tJMP " + label2);
+        // genCode(label1 + ":");
+        // genCode("\tPUSH 0");
+        // genCode(label2 + ":");
 
-		genCode("\tPOP AX");
-		genCode("\tCMP AX, 0");
-        if(!conditionality){
-		genCode("\tJNE " + label1);
-		genCode("\tPUSH 1");
-		genCode("\tJMP " + label2);
-		genCode(label1 + ":");
-		genCode("\tPUSH 0");
-		genCode(label2 + ":");
-        }
-        else{
+        genCode("\tPOP AX");
+        genCode("\tCMP AX, 0");
+        if (!conditionality)
+        {
             genCode("\tJNE " + label1);
-            genCode("\tJE "+label2);
+            genCode("\tPUSH 1");
+            genCode("\tJMP " + label2);
+            genCode(label1 + ":");
+            genCode("\tPUSH 0");
+            genCode(label2 + ":");
+        }
+        else
+        {
+            genCode("\tJNE " + label1);
+            genCode("\tJE " + label2);
         }
 
+        // genCode("CMP AX,0");
 
-            // genCode("CMP AX,0");
-             
-            // genCode("JE "+l1);
-            // genCode("MOV AX,0");
-            
-            // genCode("JMP "+l2);
-            // out<<l1<<" : ";
-            // genCode("MOV AX,1");
-            // out<<l2<<" : ";
-            // push("AX");
-     
+        // genCode("JE "+l1);
+        // genCode("MOV AX,0");
+
+        // genCode("JMP "+l2);
+        // out<<l1<<" : ";
+        // genCode("MOV AX,1");
+        // out<<l2<<" : ";
+        // push("AX");
     }
-
 };
 
 // class factor_unary: public unary_expression{
 
-
-
 // };
-class term :public ParserNode{
-      public:
-         term(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
+class term : public ParserNode
+{
+public:
+    term(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
         : ParserNode(firstLine, lastLine, matchedRule, dataType, value)
     {
-        
     }
-
-  
-
 };
 
-class term_mulop_unary : public term{
-    public:
-       term_mulop_unary(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
+class term_mulop_unary : public term
+{
+public:
+    term_mulop_unary(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
         : term(firstLine, lastLine, matchedRule, dataType, value)
     {
-        
     }
 
-    void processCode(ofstream& out){
-            copyLabelsToChild(1);
-            copyLabelsToChild(3);
-            for(auto x : this->getSubordinate()){
+    void processCode(ofstream &out)
+    {
+        copyLabelsToChild(1);
+        copyLabelsToChild(3);
+        for (auto x : this->getSubordinate())
+        {
             x->processCode(out);
         }
         pop("BX");
         pop("AX");
-        if(this->getOperator() =="*"){
+        if (this->getOperator() == "*")
+        {
             genCode("IMUL BX");
         }
-        else{
+        else
+        {
             genCode("CWD");
             genCode("IDIV BX");
-            if(this->getOperator()=="%"){
-                genCode("MOV AX,DX");
+            if (this->getOperator() == "%")
+            {
+                genCode("MOV AX, DX");
             }
         }
         push("AX");
-        
     }
-
 };
-class simple_expr :public ParserNode{
-      public:
-         simple_expr(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
+class simple_expr : public ParserNode
+{
+public:
+    simple_expr(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
         : ParserNode(firstLine, lastLine, matchedRule, dataType, value)
     {
-        
     }
-
-  
-
 };
-class simple_expr_addop_term : public simple_expr{
+class simple_expr_addop_term : public simple_expr
+{
 
-      public:
-       simple_expr_addop_term(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
+public:
+    simple_expr_addop_term(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
         : simple_expr(firstLine, lastLine, matchedRule, dataType, value)
     {
-        
     }
 
-    void processCode(ofstream& out){
+    void processCode(ofstream &out)
+    {
         copyLabelsToChild(1);
         copyLabelsToChild(3);
 
-            for(auto x : this->getSubordinate()){
+        for (auto x : this->getSubordinate())
+        {
             x->processCode(out);
         }
         pop("BX");
         pop("AX");
-        if(this->getOperator() =="+"){
+        if (this->getOperator() == "+")
+        {
             genCode("ADD AX,BX");
         }
-        else{
+        else
+        {
             genCode("SUB AX,BX");
         }
         push("AX");
     }
-        
-
 };
 
-class expression: public ParserNode{
-      public:
- expression(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
+class expression : public ParserNode
+{
+public:
+    expression(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
         : ParserNode(firstLine, lastLine, matchedRule, dataType, value)
     {
-        
     }
-
 };
 
-class var_assignop_logic : public expression {
-    void assignHandler(ofstream& out){
+class var_assignop_logic : public expression
+{
+    void assignHandler(ofstream &out)
+    {
         pop("AX");
-        SymbolInfo* si=this->getSubordinateNth(1)->getSymbolInfo();
-        //cout<<"-------------------------------- variable assignop : "<<*si<<endl;
-        if(si->isArray()){
-            if(getVariableOffset(si->getName())==-1){
-                genCode("MOV [SI],AX");
+        SymbolInfo *si = this->getSubordinateNth(1)->getSymbolInfo();
+        // cout<<"-------------------------------- variable assignop : "<<*si<<endl;
+        if (si->isArray())
+        {
+            if (getVariableOffset(si->getName()) == -1)
+            {
+                genCode("MOV [SI], AX");
             }
-            else{
-                genCode("MOV [DI],AX");
+            else
+            {
+                genCode("MOV [DI], AX");
             }
-
         }
-        else{
-            genCode("MOV "+getVarAddressName(si->getName())+",AX");
+        else
+        {
+            genCode("MOV " + getVarAddressName(si->getName()) + ",AX");
         }
 
         ////////////////////////////////////////////////////push("AX");
     }
 
-
-    public:
-     var_assignop_logic(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
+public:
+    var_assignop_logic(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
         : expression(firstLine, lastLine, matchedRule, dataType, value)
     {
-        
     }
-    void processCode(ofstream& out){
-      copyLabelsToChild(3);
+    void processCode(ofstream &out)
+    {
+        copyLabelsToChild(3);
 
-        for(int i=this->getSubordinate().size(); i>0; i--){
-            ParserNode* x=getSubordinateNth(i);
+        for (int i = this->getSubordinate().size(); i > 0; i--)
+        {
+            ParserNode *x = getSubordinateNth(i);
             x->processCode(out);
-
         }
 
         assignHandler(out);
-
-
-
     }
 };
 
-class statement : public ParserNode {
+class statement : public ParserNode
+{
 
-    public:
- statement(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
+public:
+    statement(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
         : ParserNode(firstLine, lastLine, matchedRule, dataType, value)
     {
-        
     }
-
 };
 
-class printlnCaller: public statement {
-      public:
- printlnCaller(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
+class printlnCaller : public statement
+{
+public:
+    printlnCaller(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
         : statement(firstLine, lastLine, matchedRule, dataType, value)
     {
-        
     }
 
-    void processCode(ofstream& out){
-                for(auto x : this->getSubordinate()){
+    void processCode(ofstream &out)
+    {
+        for (auto x : this->getSubordinate())
+        {
             x->processCode(out);
         }
-        //string name=this->getSymbolInfo()->getName();
+        // string name=this->getSymbolInfo()->getName();
 
-            isPrinterCalled=true;
-            //cout<<"this is a printer\n"<<endl;
-            SymbolInfo* info=this->getSubordinateNth(3)->getSymbolInfo();
-            //cout<<"println info = "<<*info<<endl;
-            genCode("MOV AX,"+getVarAddressName(info->getName()));
-            genCode("CALL println");
-
+        isPrinterCalled = true;
+        // cout<<"this is a printer\n"<<endl;
+        SymbolInfo *info = this->getSubordinateNth(3)->getSymbolInfo();
+        // cout<<"println info = "<<*info<<endl;
+        genCode("MOV AX," + getVarAddressName(info->getName()));
+        genCode("CALL println");
     }
 };
 
-class rel_expression : public ParserNode{
-    public:
- rel_expression(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
+class rel_expression : public ParserNode
+{
+public:
+    rel_expression(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
         : ParserNode(firstLine, lastLine, matchedRule, dataType, value)
     {
-        
     }
-
 };
-class simp_relop_simp_relexp:public rel_expression{
-    
+class simp_relop_simp_relexp : public rel_expression
+{
 
-    string getJumpInstruction(){
-        
-        if(getOperator()=="==")return "JE";
-        if(getOperator()=="!=")return "JNE";
-        if(getOperator()=="<")return "JL";
-        if(getOperator()==">")return "JG";
-        if(getOperator()=="<=")return "JLE";
-        if(getOperator()==">=")return "JGE";
+    string getJumpInstruction()
+    {
+
+        if (getOperator() == "==")
+            return "JE";
+        if (getOperator() == "!=")
+            return "JNE";
+        if (getOperator() == "<")
+            return "JL";
+        if (getOperator() == ">")
+            return "JG";
+        if (getOperator() == "<=")
+            return "JLE";
+        if (getOperator() == ">=")
+            return "JGE";
     }
-    string getFalseJumpInstruction(){
-        if(getOperator()=="==")return "JNE";
-        if(getOperator()=="!=")return "JE";
-        if(getOperator()=="<")return "JGE";
-        if(getOperator()==">")return "JLE";
-        if(getOperator()=="<=")return "JG";
-        if(getOperator()==">=")return "JL";
+    string getFalseJumpInstruction()
+    {
+        if (getOperator() == "==")
+            return "JNE";
+        if (getOperator() == "!=")
+            return "JE";
+        if (getOperator() == "<")
+            return "JGE";
+        if (getOperator() == ">")
+            return "JLE";
+        if (getOperator() == "<=")
+            return "JG";
+        if (getOperator() == ">=")
+            return "JL";
     }
 
     // string genJump(string label,string ji="JMP"){
-        
 
     // }
-    void relHandler(){
-        cout<<"relHandler called"<<endl;
-        cout<<"operator: "<<getOperator()<<endl;
+    void relHandler()
+    {
+        cout << "relHandler called" << endl;
+        cout << "operator: " << getOperator() << endl;
 
+        if (this->getTrueLabel() == "")
+        {
+            this->setTrueLabel(getNewLabel());
+        }
+        if (this->getFalseLabel() == "")
+        {
+            this->setFalseLabel(getNewLabel());
+        }
 
-
-        if(this->getTrueLabel()==""){this->setTrueLabel(getNewLabel());}
-        if(this->getFalseLabel()==""){this->setFalseLabel(getNewLabel());}
-
-        string btrue=this->getTrueLabel();
-        string bfalse=this->getFalseLabel();
-
-
+        string btrue = this->getTrueLabel();
+        string bfalse = this->getFalseLabel();
 
         pop("DX");
         pop("AX");
-        genCode("CMP AX,DX");
+        genCode("CMP AX, DX");
 
-        cout<<"btrue ,bfalse = "<<btrue<<" "<<bfalse<<endl;
-        if(conditionality){
+        cout << "btrue ,bfalse = " << btrue << " " << bfalse << endl;
+        if (conditionality)
+        {
+            string label1 = btrue;
+            string label2 = bfalse;
 
-        if(btrue!="fall" && bfalse!="fall"){
-            genCode("\t"+getJumpInstruction()+" "+btrue);
-            genCode("\tJMP "+bfalse);
+            if (btrue != "fall" && bfalse != "fall")
+            {
+                // genCode("\t"+getJumpInstruction()+" "+btrue);
+                // genCode("\tJMP "+bfalse);
+                genCode("\t" + getJumpInstruction() + " " + label1);
+                genCode("\tJMP " + label2);
+            }
+            else if (btrue != "fall")
+            {
+
+                genCode("\t" + getJumpInstruction() + " " + label1);
+            }
+            else if (bfalse != "fall")
+            {
+                // genCode("\t"+getFalseJumpInstruction()+" "+bfalse);
+                genCode("\t" + getFalseJumpInstruction() + " " + label2);
+            }
         }
-        else if(btrue!="fall"){
-            genCode("\t"+getJumpInstruction()+" "+btrue);
-        }
-        else if(bfalse!="fall"){
-            genCode("\t"+getFalseJumpInstruction()+" "+bfalse);
-        }
-        }
 
-        //if not called from if,else,loop
-        if(!conditionality){
+        // if(conditionality){
 
-        string label1=btrue;
-        string label2=bfalse;
-        // genCode("\tPOP DX");
-		// genCode("\tPOP AX");
-		// genCode("\tCMP AX, DX");
-		genCode("\t"+getJumpInstruction() +" "+ label1);
-		genCode("\tPUSH 0");
-		genCode("\tJMP " + label2);
-		genCode(label1 + ":");
-		genCode("\tPUSH 1");
-		genCode(label2 + ":");
+        //     string label1 = btrue;
+        //     string label2 = bfalse;
 
+        //      genCode("\t" + getJumpInstruction() + " " + btrue);
+        //    // genCode("\tPUSH 0");
+        //     genCode("\tJMP " + label2);
+        //    // genCode(label1 + ":");
+        //    // genCode("\tPUSH 1");
+        //    // genCode(label2 + ":");
 
+        // }
+
+        // if not called from if,else,loop
+        if (!conditionality)
+        {
+
+            string label1 = btrue;
+            string label2 = bfalse;
+            // genCode("\tPOP DX");
+            // genCode("\tPOP AX");
+            // genCode("\tCMP AX, DX");
+            genCode("\t" + getJumpInstruction() + " " + label1);
+            genCode("\tPUSH 0");
+            genCode("\tJMP " + label2);
+            genCode(label1 + ":");
+            genCode("\tPUSH 1");
+            genCode(label2 + ":");
 
             // printLabel(btrue);
             // push(1);
@@ -953,89 +1020,93 @@ class simp_relop_simp_relexp:public rel_expression{
             // printLabel(bfalse);
             // push(0);
             // printLabel(nextL);
-
         }
-        conditionality=false;
-        cout<<"relHandling done"<<endl;
-       // push("AX");
-
+        // conditionality = false;
+        cout << "relHandling done" << endl;
+        // push("AX");
     }
 
-    public:
-     simp_relop_simp_relexp(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
+public:
+    simp_relop_simp_relexp(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
         : rel_expression(firstLine, lastLine, matchedRule, dataType, value)
     {
-        
     }
-    void processCode(ofstream& out){
+    void processCode(ofstream &out)
+    {
         copyNextLabelsToChild(1);
         copyNextLabelsToChild(3);
 
+        cout << "-------------------------------- simp rel simp called--------------------------------" << endl;
+        cout << "is conditional = " << conditionality << endl;
+        for (auto x : this->getSubordinate())
+        {
 
-        cout<<"-------------------------------- simp rel simp called--------------------------------"<<endl;
-        cout<<"is conditional = "<<conditionality<<endl;
-        for(auto x:this->getSubordinate()){
-            
             x->processCode(out);
         }
         relHandler();
-        cout<<"exiting relop "<<endl;
+        cout << "exiting relop " << endl;
     }
-
-
 };
 
-class logic_expression : public ParserNode{
-        public:
- logic_expression(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
+class logic_expression : public ParserNode
+{
+public:
+    logic_expression(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
         : ParserNode(firstLine, lastLine, matchedRule, dataType, value)
     {
-        
     }
 };
 
-class rel_logic : public logic_expression {
-    public:
-         rel_logic(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
+class rel_logic : public logic_expression
+{
+public:
+    rel_logic(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
         : logic_expression(firstLine, lastLine, matchedRule, dataType, value)
     {
-        
     }
-    void processCode(ofstream& out){
+    void processCode(ofstream &out)
+    {
         copyLabelsToChild(1);
 
-        for(auto x: this->getSubordinate()){
+        for (auto x : this->getSubordinate())
+        {
             x->processCode(out);
         }
-        
     }
-
 };
-class rel_logicop_rel : public logic_expression{
-    vector<ParserNode*> children;
-    void orHandler(){
-        cout<<endl<<endl<<"orrrrrrrrrrrrrr\n"<<endl<<endl;
-        if(getTrueLabel()!="fall"){
-                children[0]->setTrueLabel(getTrueLabel());
+class rel_logicop_rel : public logic_expression
+{
+    vector<ParserNode *> children;
+    void orHandler()
+    {
+
+        if (getTrueLabel() != "fall")
+        {
+            children[0]->setTrueLabel(getTrueLabel());
         }
-        else{
+        else
+        {
             children[0]->setTrueLabel(getNewLabel());
         }
         children[0]->setFalseLabel("fall");
-        
+
         children[2]->setFalseLabel(getFalseLabel());
         children[2]->setTrueLabel(getTrueLabel());
-
-
-     
     }
 
-    void andHandler(){
-        cout<<endl<<endl<<"andddddddd\n"<<endl<<endl;
-        if(getFalseLabel()!="fall"){
-                children[0]->setFalseLabel(getFalseLabel());
+    void andHandler()
+    {
+        // cout << endl
+        //      << endl
+        //      << "andddddddd\n"
+        //      << endl
+        //      << endl;
+        if (getFalseLabel() != "fall")
+        {
+            children[0]->setFalseLabel(getFalseLabel());
         }
-        else{
+        else
+        {
             children[0]->setFalseLabel(getNewLabel());
         }
         children[0]->setTrueLabel("fall");
@@ -1043,18 +1114,18 @@ class rel_logicop_rel : public logic_expression{
         children[2]->setTrueLabel(getTrueLabel());
     }
 
-    void LabelHandler(){
+    void LabelHandler()
+    {
         // makeChildIsConditional(1);
         // makeChildIsConditional(3);
-        children=this->getSubordinate();
-        // children[0]->conditionality=true;
-        // children[2]->conditionality=true;
-        // children[0]->setConditional();
-        // children[2]->setConditional();
-        if(getOperator() =="||"){
+        children = this->getSubordinate();
+
+        if (getOperator() == "||")
+        {
             orHandler();
         }
-        else if(getOperator() =="&&"){
+        else if (getOperator() == "&&")
+        {
             andHandler();
         }
         children[2]->setNextLabel(getNextLabel());
@@ -1062,100 +1133,113 @@ class rel_logicop_rel : public logic_expression{
         // // cout<<"is conditional----------- "<<children[0]->conditionality<<endl;
         //  cout<<"is conditional----------- "<<children[2]->conditionality<<endl;
         this->setSubordinate(children);
-        cout<<"after setting isConditionalExp----------- \n";
+        cout << "after setting isConditionalExp----------- \n";
         // cout<<"is conditional----------- "<<getSubordinate()[0]->conditionality<<endl;
         //  cout<<"is conditional----------- "<<getSubordinate()[0]->conditionality<<endl;
     }
 
-    void orCoder(){
-        cout<<"-------------------------------- orcoding\n"<<endl;
-        if(getTrueLabel() == "fall"){
-            
-            genCode(children[0]->getTrueLabel()+" :\n");
+    void orCoder()
+    {
+        cout << "-------------------------------- orcoding\n"
+             << endl;
+        if (getTrueLabel() == "fall")
+        {
+
+            genCode(children[0]->getTrueLabel() + " :\n");
         }
     }
 
-    void andCoder(){
-        if(getFalseLabel() == "fall"){
-              genCode(children[0]->getFalseLabel()+" :\n");
+    void andCoder()
+    {
+        if (getFalseLabel() == "fall")
+        {
+            genCode(children[0]->getFalseLabel() + " :\n");
         }
     }
-    void Coder(){
-        if(getOperator() == "&&"){andCoder();}
-        if(getOperator() == "||"){orCoder();}
-        if(!conditionality){
-            string label1=this->getTrueLabel();
-            string label2=this->getFalseLabel();
-		    genCode(label1 + ":");
-            string newL=getNewLabel();
+    void Coder()
+    {
+        if (getOperator() == "&&")
+        {
+            andCoder();
+        }
+        if (getOperator() == "||")
+        {
+            orCoder();
+        }
+        if (!conditionality)
+        {
+            string label1 = this->getTrueLabel();
+            string label2 = this->getFalseLabel();
+            genCode(label1 + ":");
+            string newL = getNewLabel();
             genCode("\tPUSH 1");
-		    genCode("\tJMP " + newL);
+            genCode("\tJMP " + newL);
             genCode(label2 + ":");
-		    genCode("\tPUSH 0");
-		    genCode(newL + ":");
+            genCode("\tPUSH 0");
+            genCode(newL + ":");
         }
-        conditionality=false;
+        // conditionality = false;
     }
-
-
 
 public:
-         rel_logicop_rel(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
+    rel_logicop_rel(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
         : logic_expression(firstLine, lastLine, matchedRule, dataType, value)
     {
-        
     }
-    void processCode(ofstream& out){
-        if(getTrueLabel()=="")setTrueLabel(getNewLabel());
-        if(getFalseLabel()=="")setFalseLabel(getNewLabel());
+    void processCode(ofstream &out)
+    {
+        bool conditionalitybefore = conditionality;
+        if (getTrueLabel() == "")
+            setTrueLabel(getNewLabel());
+        if (getFalseLabel() == "")
+            setFalseLabel(getNewLabel());
 
+        LabelHandler(); // set inherited labels to children
 
-        LabelHandler();//set inherited labels to children
-
-        for(auto x:this->getSubordinate()){
-            conditionality=1;
+        for (auto x : this->getSubordinate())
+        {
+            conditionality = true;
             x->processCode(out);
-            conditionality=0;
+            conditionality = false;
         }
-
-        Coder();//extra labels
-
+        conditionality = conditionalitybefore;
+        Coder(); // extra labels
+       
     }
 };
 
-
-
-class compound_statement_statement : public statement{
-          public:
- compound_statement_statement(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
+class compound_statement_statement : public statement
+{
+public:
+    compound_statement_statement(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
         : statement(firstLine, lastLine, matchedRule, dataType, value)
     {
-        
     }
 
-    void processCode(ofstream& out){
+    void processCode(ofstream &out)
+    {
         copyLabelsToChild(1);
 
-        for(auto x:this->getSubordinate()){
+        for (auto x : this->getSubordinate())
+        {
             x->processCode(out);
         }
-
-
     }
-
 };
 
-class compound_statement : public ParserNode{
-       public:
- compound_statement(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
+class compound_statement : public ParserNode
+{
+public:
+    compound_statement(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
         : ParserNode(firstLine, lastLine, matchedRule, dataType, value)
     {
-        
     }
 
-    void processCode(ofstream& out){
-        if(getNextLabel()==""){
-          //  cout<<"--------------------------------settting new label for compound statement..."<<endl;
+    void processCode(ofstream &out)
+    {
+        if (getNextLabel() == "")
+        {
+            //  cout<<"--------------------------------settting new label for compound statement..."<<endl;
             this->setNextLabel(getNewLabel());
         }
         // ParserNode* p=getSubordinateNth(2);
@@ -1163,76 +1247,101 @@ class compound_statement : public ParserNode{
         // replaceSubordinate(2,p);
         this->copyLabelsToChild(2);
 
-        for(auto x: this->getSubordinate()){
+        for (auto x : this->getSubordinate())
+        {
             x->processCode(out);
         }
     }
-
 };
 
-class statements: public ParserNode{
-    public:
-     statements(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
+class statements : public ParserNode
+{
+public:
+    statements(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
         : ParserNode(firstLine, lastLine, matchedRule, dataType, value)
     {
-        
     }
 };
 
-class statement_statements : public statements{
+class statement_statements : public statements
+{
 
-    public:
-     statement_statements(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
+public:
+    statement_statements(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
         : statements(firstLine, lastLine, matchedRule, dataType, value)
     {
-        
     }
 
-    void processCode(ofstream& out){
+    void processCode(ofstream &out)
+    {
         copyLabelsToChild(1);
-        out<<";--------------------------------; LINE "<<this->getSubordinateNth(1)->getFirstLine()<<endl;
-        for(auto x: this->getSubordinate()){
+        out << ";--------------------------------; LINE " << this->getSubordinateNth(1)->getFirstLine() << endl;
+        for (auto x : this->getSubordinate())
+        {
             x->processCode(out);
         }
-       // out<<getNextLabel()<<" :\n";
-
-
+        // out<<getNextLabel()<<" :\n";
     }
 };
 
-class statements_statement_statements : public statements{
-    public:
-         statements_statement_statements(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
+class statements_statement_statements : public statements
+{
+public:
+    statements_statement_statements(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
         : statements(firstLine, lastLine, matchedRule, dataType, value)
     {
-        
     }
 
-    void processCode(ofstream& out){
-       
+    void processCode(ofstream &out)
+    {
+
         copyBooleanLabelsToChild(1);
         copyBooleanLabelsToChild(2);
-        vector<ParserNode*> children=getSubordinate();
+        vector<ParserNode *> children = getSubordinate();
         children[0]->setNextLabel(getNewLabel());
-       // cout<<"set next label for child0 at statements statement "<<children[0]->getNextLabel()<<endl;
+        // cout<<"set next label for child0 at statements statement "<<children[0]->getNextLabel()<<endl;
         children[1]->setNextLabel(getNextLabel());
 
-
-        //cout<<"testing child1 at statements statement ";
-        //children[0]->print();
-        //children[1]->print();
+        // cout<<"testing child1 at statements statement ";
+        // children[0]->print();
+        // children[1]->print();
         setSubordinate(children);
 
-
         children[0]->processCode(out);
-        
 
-        out<<children[0]->getNextLabel()<<" :\n";
-         out<<";--------------------------------; LINE "<<children[1]->getFirstLine()<<endl;
+        out << children[0]->getNextLabel() << " :\n";
+        out << ";--------------------------------; LINE " << children[1]->getFirstLine() << endl;
         children[1]->processCode(out);
+    }
+};
 
-  
-
+class if_statement : public statement
+{
+public:
+    if_statement(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
+        : statement(firstLine, lastLine, matchedRule, dataType, value)
+    {
     }
 
+    void processCode(ofstream &out)
+    {
+        this->setLabelsToChild(5, "", "", this->getNextLabel());
+        this->setLabelsToChild(3, "fall", this->getNextLabel(), "");
+
+        int i = 0;
+        for (auto x : this->getSubordinate())
+        {
+            if (i == 2)
+            {
+                conditionality = true;
+            }
+
+            cout << x->getRule() << " LINE: " << x->getFirstLine() << x->getTrueLabel() << " " << x->getFalseLabel() << " " << x->getNextLabel() << endl;
+
+            x->processCode(out);
+
+            i++;
+            conditionality = false;
+        }
+    }
 };

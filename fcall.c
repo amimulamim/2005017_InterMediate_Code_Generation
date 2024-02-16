@@ -2,7 +2,7 @@ void cc(int a);
 
 void d(int a);
 void e(int a);
-
+void mainc();
 void f(int x,int b){
     int p,q,r;
     x=x*3+10;
@@ -69,4 +69,66 @@ void k(){
 void main(){
     k();
     println(b);
+    mainc();
+    
+}
+void  fff(int t){
+    r[0]=a+t;
+    r[1]=b+t;
+    
+    t=r[0];
+    println(t);
+      t=r[1];
+    println(t);
+
+}
+
+
+void mainc(){
+    int b,c;
+    c=5;
+    a=c<5;
+    println(a);
+    a=c>=5;
+    c=c+(c>=2);
+    println(a);
+    a=(1<5)&&(2<3);
+    b=(1<5)&&(2==3);
+    println(b);
+   b=(2+(3*5)*9+8)/7;
+    println(a);
+    println(b);
+    b=(1<5)||(2<3);
+    println(b);
+    b=(1>5)||(2<3);
+    println(b);
+    b=(1>5)||(2>3);
+    println(b);
+    b=(1!=5) && (2!=(3-1));
+    println(b);
+        b=(1!=5) && (2==(3-1));
+    println(b);
+        b=(1!=5) && (2<=(3-1));
+    println(b);
+        b=(1!=5) && (2>=(3-1));
+    println(b);
+        b=(1!=5) && (2>(3-1));
+    println(b);
+    c=19;
+    c=((a==1)&&(b==1))+c;
+    println(c);
+     c=((a==1)||(b==1))+c;
+    println(c);
+    c=!c;
+    println(c);
+    c=!c;
+    println(c);
+    c=!(2>3);
+    println(c);
+    c=!((2>3)||(1>2));
+    println(c);
+    c=!(1<2);
+    println(c);
+    fff(2*3+5);
+
 }

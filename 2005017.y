@@ -423,6 +423,10 @@ statements_statement_statements* new_statements_statement_statements(YYLTYPE loc
 return (new statements_statement_statements(location.first_line,location.last_line,rule,datatype,value));
 }
 
+if_statement* new_if_statement(YYLTYPE location, const std::string rule,string datatype="",string value=""){
+return (new if_statement(location.first_line,location.last_line,rule,datatype,value));
+}
+
 // logic_expression_expression* new_logic_expression_expression(YYLTYPE location, const std::string rule,string datatype="",string value=""){
 // return (new logic_expression_expression(location.first_line,location.last_line,rule,datatype,value));
 // }
@@ -892,7 +896,7 @@ parameter_list  : parameter_list COMMA type_specifier ID{
 	  | IF LPAREN expression RPAREN statement{
       string rule="statement : IF LPAREN expression RPAREN statement";
       logRule(rule);
-      $$=parsing(@$,rule)->addSubordinate(parsing(@1,IF_R))->addSubordinate(parsing(@2,LPAREN_R))->addSubordinate($3)->addSubordinate(parsing(@4,RPAREN_R))->addSubordinate($5);
+      $$=new_if_statement(@$,rule)->addSubordinate(parsing(@1,IF_R))->addSubordinate(parsing(@2,LPAREN_R))->addSubordinate($3)->addSubordinate(parsing(@4,RPAREN_R))->addSubordinate($5);
     }
 	  | IF LPAREN expression RPAREN statement ELSE statement{
       string rule="statement : IF LPAREN expression RPAREN statement ELSE statement";
