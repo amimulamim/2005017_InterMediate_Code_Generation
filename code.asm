@@ -10,39 +10,43 @@ main PROC
 	MOV BP, SP
 ;--------------------------------; LINE 2
 	SUB SP,2
-L4 :
+	SUB SP,2
+L6:
 ;--------------------------------; LINE 3
-	MOV AX, 1
+	MOV AX, 0
 	PUSH AX
 	POP AX
-	MOV [BP-2],AX
-L3 :
-;--------------------------------; LINE 11
-	MOV AX, 2
+	MOV [BP-4],AX
+L5:
+;--------------------------------; LINE 4
+	MOV AX,[BP-4]
 	PUSH AX
-	MOV AX, 2
+	POP AX
+	CMP AX, 0
+	JNE L8
+	MOV AX, 1
+	PUSH AX
+	MOV AX, 5
 	PUSH AX
 	POP DX
 	POP AX
 	CMP AX, DX
-		JNE L5
-	MOV AX, 1
-	PUSH AX
-	MOV AX, 1
-	PUSH AX
-	POP DX
-	POP AX
-	CMP AX, DX
-		JNE L2
-	L5 :
-
-;--------------------------------; LINE 12
-	MOV AX, 10
-	PUSH AX
+	JLE L7
+	JMP L8
+L7:
+	PUSH 1
+	JMP L9
+L8:
+	PUSH 0
+L9:
 	POP AX
 	MOV [BP-2],AX
-L2 :
-;--------------------------------; LINE 14
+L4:
+;--------------------------------; LINE 5
+	MOV AX,[BP-2]
+	CALL println
+L3:
+;--------------------------------; LINE 6
 	MOV AX,[BP-2]
 	PUSH AX
 	MOV AX, 0
@@ -50,32 +54,39 @@ L2 :
 	POP DX
 	POP AX
 	CMP AX, DX
-		JGE L1
-	MOV AX, 1
+	JLE L2
+;--------------------------------; LINE 7
+	MOV AX, 10
 	PUSH AX
-	MOV AX, 2
+	POP AX
+	MOV [BP-2],AX
+L2:
+;--------------------------------; LINE 10
+	MOV AX,[BP-2]
+	PUSH AX
+	MOV AX, 0
 	PUSH AX
 	POP DX
 	POP AX
 	CMP AX, DX
-		JNE L1
-;--------------------------------; LINE 15
-	MOV AX, 20
+	JGE L1
+;--------------------------------; LINE 11
+	MOV AX, 10
 	PUSH AX
 	POP AX
 	NEG AX
 	PUSH AX
 	POP AX
 	MOV [BP-2],AX
-L1 :
-;--------------------------------; LINE 17
+L1:
+;--------------------------------; LINE 14
 	MOV AX,[BP-2]
 	CALL println
-L6 :
-		ADD SP, 2
-		POP BP
-		MOV AX, 4CH
-		INT 21H
+L10:
+	ADD SP, 4
+	POP BP
+	MOV AX, 4CH
+	INT 21H
 	main ENDP
 
 

@@ -178,7 +178,7 @@ void printLabel(string label, ofstream &out = asmOut)
 {
     if (label == "fall")
         return;
-    out << label << " :\n";
+    out << label << ":\n";
 }
 
 void genCode(std::string s, bool tab = true)
@@ -337,24 +337,24 @@ class func_definition : public ParserNode
 
         if (stack_offset > 0)
         {
-            genCode("\tADD SP, " + to_string(stack_offset));
+            genCode("ADD SP, " + to_string(stack_offset));
         }
-        genCode("\tPOP BP");
+        genCode("POP BP");
 
         if (func_name == "main")
         {
-            genCode("\tMOV AX, 4CH");
-            genCode("\tINT 21H");
+            genCode("MOV AX, 4CH");
+            genCode("INT 21H");
         }
 
         else
         {
 
             if (params.size() != 0)
-                genCode("\tRET " + to_string(params.size() * 2));
+                genCode("RET " + to_string(params.size() * 2));
             else
-                genCode("\tRET");
-            // genCode("\tRET");
+                genCode("RET");
+            // genCode("RET");
         }
         genCode(func_name + " ENDP\n\n");
 
@@ -676,31 +676,33 @@ public:
         string label1 = getFalseLabel();
         string label2 = getTrueLabel();
 
-        //      		genCode("\tPOP AX");  ///////////////////this is kept as backup
-        // genCode("\tCMP AX, 0");
-        // genCode("\tJNE " + label1);
+        //      		genCode("POP AX");  ///////////////////this is kept as backup
+        // genCode("CMP AX, 0");
+        // genCode("JNE " + label1);
 
-        // genCode("\tPUSH 1");
-        // genCode("\tJMP " + label2);
+        // genCode("PUSH 1");
+        // genCode("JMP " + label2);
         // genCode(label1 + ":");
-        // genCode("\tPUSH 0");
+        // genCode("PUSH 0");
         // genCode(label2 + ":");
 
-        genCode("\tPOP AX");
-        genCode("\tCMP AX, 0");
+        genCode("POP AX");
+        genCode("CMP AX, 0");
         if (!conditionality)
         {
-            genCode("\tJNE " + label1);
-            genCode("\tPUSH 1");
-            genCode("\tJMP " + label2);
-            genCode(label1 + ":");
-            genCode("\tPUSH 0");
-            genCode(label2 + ":");
+            genCode("JNE " + label1);
+            genCode("PUSH 1");
+            genCode("JMP " + label2);
+            genCode(label1 + ":",false);
+            genCode("PUSH 0");
+            genCode(label2 + ":",false);
         }
         else
-        {
-            genCode("\tJNE " + label1);
-            genCode("\tJE " + label2);
+        {   
+            if(label1!="fall")
+            genCode("JNE " + label1);
+            if(label2!="fall")
+            genCode("JE " + label2);
         }
 
         // genCode("CMP AX,0");
@@ -966,20 +968,20 @@ class simp_relop_simp_relexp : public rel_expression
 
             if (btrue != "fall" && bfalse != "fall")
             {
-                // genCode("\t"+getJumpInstruction()+" "+btrue);
-                // genCode("\tJMP "+bfalse);
-                genCode("\t" + getJumpInstruction() + " " + label1);
-                genCode("\tJMP " + label2);
+                // genCode(""+getJumpInstruction()+" "+btrue);
+                // genCode("JMP "+bfalse);
+                genCode("" + getJumpInstruction() + " " + label1);
+                genCode("JMP " + label2);
             }
             else if (btrue != "fall")
             {
 
-                genCode("\t" + getJumpInstruction() + " " + label1);
+                genCode("" + getJumpInstruction() + " " + label1);
             }
             else if (bfalse != "fall")
             {
-                // genCode("\t"+getFalseJumpInstruction()+" "+bfalse);
-                genCode("\t" + getFalseJumpInstruction() + " " + label2);
+                // genCode(""+getFalseJumpInstruction()+" "+bfalse);
+                genCode("" + getFalseJumpInstruction() + " " + label2);
             }
         }
 
@@ -988,11 +990,11 @@ class simp_relop_simp_relexp : public rel_expression
         //     string label1 = btrue;
         //     string label2 = bfalse;
 
-        //      genCode("\t" + getJumpInstruction() + " " + btrue);
-        //    // genCode("\tPUSH 0");
-        //     genCode("\tJMP " + label2);
+        //      genCode("" + getJumpInstruction() + " " + btrue);
+        //    // genCode("PUSH 0");
+        //     genCode("JMP " + label2);
         //    // genCode(label1 + ":");
-        //    // genCode("\tPUSH 1");
+        //    // genCode("PUSH 1");
         //    // genCode(label2 + ":");
 
         // }
@@ -1003,15 +1005,15 @@ class simp_relop_simp_relexp : public rel_expression
 
             string label1 = btrue;
             string label2 = bfalse;
-            // genCode("\tPOP DX");
-            // genCode("\tPOP AX");
-            // genCode("\tCMP AX, DX");
-            genCode("\t" + getJumpInstruction() + " " + label1);
-            genCode("\tPUSH 0");
-            genCode("\tJMP " + label2);
-            genCode(label1 + ":");
-            genCode("\tPUSH 1");
-            genCode(label2 + ":");
+            // genCode("POP DX");
+            // genCode("POP AX");
+            // genCode("CMP AX, DX");
+            genCode("" + getJumpInstruction() + " " + label1);
+            genCode("PUSH 0");
+            genCode("JMP " + label2);
+            genCode(label1 + ":",false);
+            genCode("PUSH 1");
+            genCode(label2 + ":",false);
 
             // printLabel(btrue);
             // push(1);
@@ -1145,7 +1147,7 @@ class rel_logicop_rel : public logic_expression
         if (getTrueLabel() == "fall")
         {
 
-            genCode(children[0]->getTrueLabel() + " :\n");
+            genCode(children[0]->getTrueLabel() + ":\n");
         }
     }
 
@@ -1153,7 +1155,7 @@ class rel_logicop_rel : public logic_expression
     {
         if (getFalseLabel() == "fall")
         {
-            genCode(children[0]->getFalseLabel() + " :\n");
+            genCode(children[0]->getFalseLabel() + ":\n");
         }
     }
     void Coder()
@@ -1170,13 +1172,13 @@ class rel_logicop_rel : public logic_expression
         {
             string label1 = this->getTrueLabel();
             string label2 = this->getFalseLabel();
-            genCode(label1 + ":");
+            genCode(label1 + ":",false);
             string newL = getNewLabel();
-            genCode("\tPUSH 1");
-            genCode("\tJMP " + newL);
-            genCode(label2 + ":");
-            genCode("\tPUSH 0");
-            genCode(newL + ":");
+            genCode("PUSH 1");
+            genCode("JMP " + newL);
+            genCode(label2 + ":",false);
+            genCode("PUSH 0");
+            genCode(newL + ":",false);
         }
         // conditionality = false;
     }
@@ -1309,7 +1311,7 @@ public:
 
         children[0]->processCode(out);
 
-        out << children[0]->getNextLabel() << " :\n";
+        out << children[0]->getNextLabel() << ":\n";
         out << ";--------------------------------; LINE " << children[1]->getFirstLine() << endl;
         children[1]->processCode(out);
     }
