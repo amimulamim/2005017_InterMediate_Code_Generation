@@ -1,0 +1,95 @@
+[33mcommit f535ce9835245e5c46b54373d251d4828347c3b4[m[33m ([m[1;36mHEAD -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m
+Author: amimulamim <142148987+amimulamim@users.noreply.github.com>
+Date:   Sat Feb 17 01:24:12 2024 +0600
+
+    simp exp Conditional added
+
+[33mcommit 4f526333b167b77bed245072f58024c07daea852[m
+Author: amimulamim <142148987+amimulamim@users.noreply.github.com>
+Date:   Fri Feb 16 17:13:24 2024 +0600
+
+    return ,recursion works.But problem still exists with unread push
+
+[33mcommit af9154eb2cf99614557e0d50bfa2b9c3e09d4599[m
+Author: amimulamim <142148987+amimulamim@users.noreply.github.com>
+Date:   Fri Feb 16 14:54:30 2024 +0600
+
+    label bug fixed
+
+[33mcommit dd3d51449a8f329569963c4b1b0703843a2dbed9[m
+Author: amimulamim <142148987+amimulamim@users.noreply.github.com>
+Date:   Fri Feb 16 12:28:26 2024 +0600
+
+    bug in if else,label as 00h.But issue fixed for conditionality
+
+[33mcommit 40c5dec2c8b3689213257d87fa24888d02e92509[m
+Author: amimulamim <142148987+amimulamim@users.noreply.github.com>
+Date:   Fri Feb 16 01:58:12 2024 +0600
+
+    relLogic checked
+
+[33mcommit 8db3cb93aa12fc4c00552f3fd6f6e874c783e87a[m
+Author: amimulamim <142148987+amimulamim@users.noreply.github.com>
+Date:   Thu Feb 15 23:50:09 2024 +0600
+
+    logicexp works
+
+[33mcommit e28c9b02bcc921debb39ad93d2e97572db5209c3[m
+Author: amimulamim <142148987+amimulamim@users.noreply.github.com>
+Date:   Thu Feb 15 21:26:21 2024 +0600
+
+    relop works
+
+[33mcommit 6b2552051d18bdbf033fa6042f6bef412e0064f7[m
+Author: amimulamim <142148987+amimulamim@users.noreply.github.com>
+Date:   Thu Feb 15 19:10:42 2024 +0600
+
+    label added,not complete
+
+[33mcommit ac065df95c0d5f2735daac6f26eac02fe2e5c639[m
+Author: amimulamim <142148987+amimulamim@users.noreply.github.com>
+Date:   Thu Feb 15 11:41:42 2024 +0600
+
+    func call bug fixed
+
+[33mcommit b38110d3bf66f7c6db14ca08efc1ac4b8f3e5a8e[m
+Author: amimulamim <142148987+amimulamim@users.noreply.github.com>
+Date:   Wed Feb 14 22:19:40 2024 +0600
+
+    forward decl works
+
+[33mcommit ae83e4c8040314a2d3ba900ee8f65a94681bb4ba[m
+Author: amimulamim <142148987+amimulamim@users.noreply.github.com>
+Date:   Wed Feb 14 20:45:36 2024 +0600
+
+    println comatible
+
+[33mcommit b4ad37b2ca0aa86b51545ffc0a4edbdd16abeefc[m
+Author: amimulamim <142148987+amimulamim@users.noreply.github.com>
+Date:   Wed Feb 14 10:39:58 2024 +0600
+
+    assignop fixed
+
+[33mcommit a6174e40ab815150eadc7515bc5ffa4f9b124ad1[m
+Author: amimulamim <142148987+amimulamim@users.noreply.github.com>
+Date:   Wed Feb 14 10:28:10 2024 +0600
+
+    assignop with self bug
+
+[33mcommit 5076f57208b4806aa1a242d243c60e34cbbd0799[m
+Author: amimulamim <142148987+amimulamim@users.noreply.github.com>
+Date:   Wed Feb 14 02:20:09 2024 +0600
+
+    addop added,println works
+
+[33mcommit e0498ce1a33c5f7dc12c28105ae8c1bffd5c1bbe[m
+Author: amimulamim <142148987+amimulamim@users.noreply.github.com>
+Date:   Wed Feb 14 01:20:21 2024 +0600
+
+    mulop ready
+
+[33mcommit d8483daa8d841fe892c2eb818b844abba5fed21d[m
+Author: amimulamim <142148987+amimulamim@users.noreply.github.com>
+Date:   Tue Feb 13 20:04:16 2024 +0600
+
+    initial

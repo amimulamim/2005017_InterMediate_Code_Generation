@@ -19,6 +19,7 @@ class ParserNode
     SymbolInfo *symbolInfo;
     string trueLabel, falseLabel, nextLabel;
     string op;
+   // bool conditionality,noop;
     // int isCondit;
     // bool cf;
    //
@@ -47,6 +48,7 @@ public:
         op = "";
         //conditionality=false;
        // isc="false";
+       
        
         // size_t found = matchedRule.find("error");
         // isError|= (found != std::string::npos);
@@ -301,6 +303,9 @@ public:
             subordinates[n - 1]->setNextLabel(nl);
             return this;
 
+    }
+    int getSubordinateCount(){
+        return subordinates.size();
     }
 
 };
