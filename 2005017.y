@@ -435,6 +435,10 @@ return_statement* new_return_statement(YYLTYPE location, const std::string rule,
 return (new return_statement(location.first_line,location.last_line,rule,datatype,value));
 }
 
+simp_relexp* new_simp_relexp(YYLTYPE location, const std::string rule,string datatype="",string value=""){
+return (new simp_relexp(location.first_line,location.last_line,rule,datatype,value));
+}
+
 // logic_expression_expression* new_logic_expression_expression(YYLTYPE location, const std::string rule,string datatype="",string value=""){
 // return (new logic_expression_expression(location.first_line,location.last_line,rule,datatype,value));
 // }
@@ -1022,7 +1026,7 @@ $$=new_rel_logic(@$,rule,$1->getDataType(),$1->getValue())->addSubordinate($1);
 			
 rel_expression	: simple_expression {
   string rule="rel_expression	: simple_expression ";logRule(rule);
-$$=parsing(@$,rule,$1->getDataType(),$1->getValue())->addSubordinate($1);
+$$=new_simp_relexp(@$,rule,$1->getDataType(),$1->getValue())->addSubordinate($1);
 
 }
 		| simple_expression RELOP simple_expression	{
