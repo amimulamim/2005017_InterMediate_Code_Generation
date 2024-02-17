@@ -7,6 +7,7 @@
 #include <vector>
 #include <map>
 #include <stack>
+#include <stack>
 #include "SymbolTable/SymbolTable.h"
 #include "ParseTree.h"
 
@@ -342,8 +343,10 @@ class func_definition : public ParserNode
         string func_name = this->getValue();
         // PrintNewLabel();
         // printLabel(func_name+"_Exit");
+        // printLabel(func_name+"_Exit");
         printLabel(getNewLabel());
 
+        cout << "stack excess: -------------------------------- of " << func_name << " : " << stack_excess << endl;
         cout << "stack excess: -------------------------------- of " << func_name << " : " << stack_excess << endl;
         // for(int i=0; i<stack_excess; i++){
         //     pop("DX");
@@ -498,6 +501,7 @@ public:
             string address = getVarAddressName(sym->getName());
             genCode("MOV AX, " + address);
             // genCode("PUSH AX");
+            // genCode("PUSH AX");
             push("AX");
             genCode(op + " W." + address);
         }
@@ -510,6 +514,7 @@ public:
 
                 genCode("MOV AX, [SI]");
                 push("AX");
+                push("AX");
                 genCode(op + " W.[SI]");
             }
             else
@@ -517,6 +522,7 @@ public:
                 // element of some local array, index is in CX
 
                 genCode("MOV AX, [DI]");
+                push("AX");
                 push("AX");
                 genCode(op + " W.[DI]");
             }
@@ -946,6 +952,7 @@ public:
     {
     }
 };
+
 
 class simp_relop_simp_relexp : public rel_expression
 {
