@@ -7,9 +7,16 @@ int main(){
     println(x);
 
     if(a && b)
+    {
         c[0]++;
+        c[1]=205;
+    }
     else
         c[1]=c[0];
     println(a);
+    println(b);
+    a=c[0];
+    println(a);
+    b=c[1];
     println(b);
 }

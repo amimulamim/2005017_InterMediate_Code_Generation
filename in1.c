@@ -9,7 +9,7 @@ int g(){
 }
 void main(){
     int x,y;
-    x=f(4);
+    x=f(5);
     println(x);
     x=g();
     y=x;

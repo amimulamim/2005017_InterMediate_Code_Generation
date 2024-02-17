@@ -131,7 +131,7 @@ Line# 12: Token <ASSIGNOP> Lexeme = found
 variable : ID 	 
 Line# 12: Token <ID> Lexeme f found
 Line# 12: Token <LPAREN> Lexeme ( found
-Line# 12: Token <CONST_INT> Lexeme 4 found
+Line# 12: Token <CONST_INT> Lexeme 5 found
 factor : CONST_INT
 unary_expression : factor 
 term :	unary_expression 

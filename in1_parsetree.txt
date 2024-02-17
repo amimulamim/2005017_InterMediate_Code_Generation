@@ -153,7 +153,7 @@ start : program 	<Line: 1-18>(,,)
                          term :	unary_expression  	<Line: 12-12>(,,)
                           unary_expression : factor  	<Line: 12-12>(,,)
                            factor : CONST_INT  	<Line: 12-12>(,,)
-                            CONST_INT : 4 	<Line: 12>
+                            CONST_INT : 5 	<Line: 12>
                     RPAREN : ) 	<Line: 12>
              SEMICOLON : ; 	<Line: 12>
           statement : PRINTLN LPAREN ID RPAREN SEMICOLON 	<Line: 13-13>(,,L9)

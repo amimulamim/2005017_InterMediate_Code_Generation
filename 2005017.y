@@ -427,6 +427,10 @@ if_statement* new_if_statement(YYLTYPE location, const std::string rule,string d
 return (new if_statement(location.first_line,location.last_line,rule,datatype,value));
 }
 
+while_statement* new_while_statement(YYLTYPE location, const std::string rule,string datatype="",string value=""){
+return (new while_statement(location.first_line,location.last_line,rule,datatype,value));
+}
+
 if_else_statement* new_if_else_statement(YYLTYPE location, const std::string rule,string datatype="",string value=""){
 return (new if_else_statement(location.first_line,location.last_line,rule,datatype,value));
 }
@@ -437,6 +441,10 @@ return (new return_statement(location.first_line,location.last_line,rule,datatyp
 
 simp_relexp* new_simp_relexp(YYLTYPE location, const std::string rule,string datatype="",string value=""){
 return (new simp_relexp(location.first_line,location.last_line,rule,datatype,value));
+}
+
+expression_expression_statement* new_expression_expression_statement(YYLTYPE location, const std::string rule,string datatype="",string value=""){
+return (new expression_expression_statement(location.first_line,location.last_line,rule,datatype,value));
 }
 
 // logic_expression_expression* new_logic_expression_expression(YYLTYPE location, const std::string rule,string datatype="",string value=""){
@@ -919,7 +927,7 @@ parameter_list  : parameter_list COMMA type_specifier ID{
 	  | WHILE LPAREN expression RPAREN statement{
       string rule="statement : WHILE LPAREN expression RPAREN statement";
       logRule(rule);
-      $$=parsing(@$,rule)->addSubordinate(parsing(@1,WHILE_R))->addSubordinate(parsing(@2,LPAREN_R))->addSubordinate($3)->addSubordinate(parsing(@4,RPAREN_R))->addSubordinate($5);
+      $$=new_while_statement(@$,rule)->addSubordinate(parsing(@1,WHILE_R))->addSubordinate(parsing(@2,LPAREN_R))->addSubordinate($3)->addSubordinate(parsing(@4,RPAREN_R))->addSubordinate($5);
       
     }
 	  | PRINTLN LPAREN ID RPAREN SEMICOLON{
@@ -948,7 +956,7 @@ parameter_list  : parameter_list COMMA type_specifier ID{
 			| expression SEMICOLON {
         string rule="expression_statement : expression SEMICOLON";
         logRule(rule);
-        $$=parsing(@$,rule)->addSubordinate($1)->addSubordinate(parsing(@2,SEMICOLON_R));
+        $$=new_expression_expression_statement(@$,rule)->addSubordinate($1)->addSubordinate(parsing(@2,SEMICOLON_R));
 
       }
 			;

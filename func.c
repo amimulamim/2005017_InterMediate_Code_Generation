@@ -9,11 +9,18 @@ int g(int a, int b){
     return x;
 }
 
+void ff(int x){
+    int x;
+    x++;
+    x--;
+}
+
 int main(){
     int a,b;
     a=1;
     b=2;
     a=g(a,b);
     println(a);
+    ff(5);
     return 0;
 }

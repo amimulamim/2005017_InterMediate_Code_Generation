@@ -16,6 +16,6 @@ echo 'All ready, running'
 # ./2005017 errorrecover.c
 # ./2005017 noerror.c
 # ./2005017 sserror.c
-./2005017 inp.c
+./2005017 func.c
 
 rm lex.yy.c l.o y.o 2005017.tab.c 2005017.tab.h 2005017

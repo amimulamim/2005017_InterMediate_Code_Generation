@@ -595,7 +595,7 @@ public:
         bool neededBefore = needed;
         //    needed=false;
 
-        //out << ";----------------------------------------------------------------setting needed false for factor:lp exp rp";
+        // out << ";----------------------------------------------------------------setting needed false for factor:lp exp rp";
 
         ParserNode *pn = this->getSubordinateNth(2);
         // cout<<"fact (E)"<<" "<<pn->getTrueLabel()<<" "<<pn->getFalseLabel()<<pn->getNextLabel()<<endl;
@@ -629,11 +629,12 @@ public:
         string retType = this->getSymbolInfo()->getVarType();
         // cout<<"calling f= "<<*this->getSymbolInfo()<<endl;
         // cout<<"rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrtype of   "<<name<<" : "<<retType<<endl;
-        if (retType != "VOID")
-        {
-            push("AX"); // return value pushing
-            // returned=false;
-        }
+        // if (retType != "VOID")
+        // {
+        //     push("AX"); // return value pushing
+        //     // returned=false;
+        // }
+        push("AX"); // return value
     }
 };
 
@@ -713,16 +714,16 @@ public:
         {
             pop("AX");
             genCode("CMP AX, 0");
-            if(label1!="fall")
-            genCode("JNE " + label1);
+            if (label1 != "fall")
+                genCode("JNE " + label1);
             push(1);
-            if(label2!="fall")
-            genCode("JMP " + label2);
-            if(label1!="fall")
-            genCode(label1 + ":", false);
+            if (label2 != "fall")
+                genCode("JMP " + label2);
+            if (label1 != "fall")
+                genCode(label1 + ":", false);
             push(0);
-            if(label2!="fall")
-            genCode(label2 + ":", false);
+            if (label2 != "fall")
+                genCode(label2 + ":", false);
         }
         else
         {
@@ -862,7 +863,7 @@ class var_assignop_logic : public expression
         {
             genCode("MOV " + getVarAddressName(si->getName()) + ",AX");
         }
-
+        push("AX");
         ////////////////////////////////////////////////////push("AX");
     }
 
@@ -883,6 +884,23 @@ public:
 
         assignHandler(out);
     }
+};
+
+class expression_expression_statement : public ParserNode{
+   public:
+        expression_expression_statement(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
+        : ParserNode(firstLine, lastLine, matchedRule, dataType, value)
+    {
+    }
+    void processCode(ofstream &out){
+        copyLabelsToChild(1);
+
+        for(auto x:this->getSubordinate()){
+            x->processCode(out);
+        }
+        pop("AX");
+    }
+
 };
 
 class statement : public ParserNode
@@ -1036,17 +1054,17 @@ class simp_relop_simp_relexp : public rel_expression
             // genCode("POP DX");
             // genCode("POP AX");
             // genCode("CMP AX, DX");
-            if(label1!="fall")
-            genCode("" + getJumpInstruction() + " " + label1);
+            if (label1 != "fall")
+                genCode("" + getJumpInstruction() + " " + label1);
             // genCode("PUSH 0");
             push(0);
-            if(label2!="fall")
-            genCode("JMP " + label2);
-            if(label1!="fall")
-            genCode(label1 + ":", false);
+            if (label2 != "fall")
+                genCode("JMP " + label2);
+            if (label1 != "fall")
+                genCode(label1 + ":", false);
             push(1);
-            if(label2!="fall")
-            genCode(label2 + ":", false);
+            if (label2 != "fall")
+                genCode(label2 + ":", false);
 
             // printLabel(btrue);
             // push(1);
@@ -1077,7 +1095,7 @@ public:
         {
             // needed = false;
             // //genCode(";calling simp rel simp ,here ");
-            //out << ";before simp rel simp : needed is : " << needed << endl;
+            // out << ";before simp rel simp : needed is : " << needed << endl;
             x->processCode(out);
             // needed = true;
         }
@@ -1189,14 +1207,14 @@ class rel_logicop_rel : public logic_expression
              << endl;
         if (getTrueLabel() == "fall")
         {
-            //genCode(";ORcoder--------------------------------");
+            // genCode(";ORcoder--------------------------------");
             genCode(children[0]->getTrueLabel() + ":\n", false);
         }
     }
 
     void andCoder()
     {
-        //genCode(";ANDcoder--------------------------------");
+        // genCode(";ANDcoder--------------------------------");
         if (getFalseLabel() == "fall")
         {
             genCode(children[0]->getFalseLabel() + ":\n", false);
@@ -1254,18 +1272,18 @@ public:
         {
             conditionality = true;
             bool neededBefore = needed;
-            //out << ";" << x->getSubordinateCount() << " children\n";
-            // out<<";before processing : "
+            // out << ";" << x->getSubordinateCount() << " children\n";
+            //  out<<";before processing : "
             if (i != 1)
             {
                 if (x->getSubordinateCount() > 1)
                 {
-                    //genCode(";setting needed false for " + x->getRule());
+                    // genCode(";setting needed false for " + x->getRule());
                     needed = false;
                 }
                 else if (x->getSubordinateCount() == 1)
                 {
-                    //genCode(";setting needed true for " + x->getRule());
+                    // genCode(";setting needed true for " + x->getRule());
                     needed = true;
                 }
             }
@@ -1469,6 +1487,43 @@ public:
     }
 };
 
+class while_statement : public statement
+{
+public:
+    while_statement(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
+        : statement(firstLine, lastLine, matchedRule, dataType, value)
+    {
+    }
+
+    void processCode(ofstream &out)
+    {
+        string begin = getNewLabel();
+        this->setLabelsToChild(5, "", "", begin);
+        this->setLabelsToChild(3, "fall", this->getNextLabel(), "");
+
+        int i = 0;
+        printLabel(begin);
+        for (auto x : this->getSubordinate())
+        {
+            if (i == 2)
+            {
+
+                cout << x->getRule() << " LINE: " << x->getFirstLine() << x->getTrueLabel() << " " << x->getFalseLabel() << " " << x->getNextLabel() << endl;
+
+                x->processCode(out);
+
+                if (i == 4)
+                {
+                    genCode("JMP " + begin);
+                }
+
+                i++;
+                conditionality = false;
+            }
+        }
+    }
+};
+
 class return_statement : public statement
 {
 
@@ -1521,16 +1576,16 @@ class simp_relexp : public rel_expression
 
         if (conditionality && needed)
         {
-            //genCode(";-------------------------------- simp of rel called--------------------------------\n");
+            // genCode(";-------------------------------- simp of rel called--------------------------------\n");
             if (this->getTrueLabel() == "")
             {
                 this->setTrueLabel(getNewLabel());
-                //genCode(";---------------------------simp created TRUE label =" + getTrueLabel() + "\n");
+                // genCode(";---------------------------simp created TRUE label =" + getTrueLabel() + "\n");
             }
             if (this->getFalseLabel() == "")
             {
                 this->setFalseLabel(getNewLabel());
-                //genCode(";---------------------------simp created false label =" + getFalseLabel() + "\n");
+                // genCode(";---------------------------simp created false label =" + getFalseLabel() + "\n");
             }
 
             string btrue = this->getTrueLabel();
@@ -1539,7 +1594,7 @@ class simp_relexp : public rel_expression
             // pop("DX");
 
             cout << "btrue ,bfalse = " << btrue << " " << bfalse << endl;
-            //genCode(";conditionality of simple exp");
+            // genCode(";conditionality of simple exp");
             pop("AX");
             genCode("CMP AX, 0");
             string label1 = btrue;
@@ -1563,7 +1618,7 @@ class simp_relexp : public rel_expression
                 genCode("" + getFalseJumpInstruction() + " " + label2);
             }
             // needed = false;
-            //genCode(";-------------------------------- simp of rel done--------------------------------\n");
+            // genCode(";-------------------------------- simp of rel done--------------------------------\n");
         }
         needed = false;
 
@@ -1603,7 +1658,7 @@ public:
         // cout << "-------------------------------- simp of rel called--------------------------------" << endl;
         //  cout << "is conditional = " << conditionality << endl;
         // //out << ";--------------------------------simp_rel\n";
-        //out << ";needed for simp relexp = " << needed << endl;
+        // out << ";needed for simp relexp = " << needed << endl;
         for (auto x : this->getSubordinate())
         {
 

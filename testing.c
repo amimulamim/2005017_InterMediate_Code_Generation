@@ -19,6 +19,8 @@ void main(){
 	else 
 		i=200;
 	println(i);
+    a=1;
+    b=1;
     if(!(a && !b)){
         i=212;
         println(i);
