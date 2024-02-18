@@ -10,21 +10,25 @@
 #include <stack>
 #include "SymbolTable/SymbolTable.h"
 #include "ParseTree.h"
-#include"optUtil.h"
+#include "optUtil.h"
 
 #define CODE_FILE_NAME "code.asm"
 #define OPT_CODE_FILE_NAME "optcode.asm"
 
-bool conditionality = false;
-// bool returned = false;
+// bool conditionality = false;
+//  bool returned = false;
 ofstream asmOut;
 int stack_offset = 0;
 int label = 0;
 vector<map<string, int>> offsetmap;
 stack<string> exitLabel;
-bool needed = false;
+// bool needed = false;
 int stack_excess = 0;
 
+void printDebug(ParserNode *p, bool c, bool ne)
+{
+    asmOut<<";" << p->getRule() << " " << p->getFirstLine() << " f: " << c << "," << ne << endl;
+}
 void printOffsetMap()
 {
     for (int i = 0; i < offsetmap.size(); i++)
@@ -139,7 +143,6 @@ string getVarAddressName(string vname)
     return "[BP" + (offset ? ((offset > 0 ? "-" : "+") + to_string(abs(offset))) : "") + "]";
 }
 
-
 void PrintNewLabel()
 {
     asmOut << "Label" << label++ << " : " << endl;
@@ -195,11 +198,12 @@ void pop(std::string reg, std::string comment = "")
 {
     asmOut << "\t"
            << "POP " << reg;
-    if (comment.length() > 0){
-        asmOut << "; " << comment;
+    if (comment.length() > 0)
+    {
+        asmOut<<"; " << comment;
     }
-      
-        asmOut << endl;
+
+    asmOut << endl;
     stack_excess--;
 }
 
@@ -211,6 +215,9 @@ void genStartCode(ParserNode *node, SymbolTable *table)
 .Data\n\
 \tnumber DB \"00000$\"";
     asmOut << c << endl;
+
+    bool conditionality = false;
+    bool needed = false;
 
     for (SymbolInfo *info : table->getSymbols())
     {
@@ -232,7 +239,7 @@ void genStartCode(ParserNode *node, SymbolTable *table)
     }
     asmOut << ".CODE\n";
 
-    node->processCode(asmOut);
+    node->processCode(asmOut, conditionality, needed);
 
     if (isPrinterCalled)
     {
@@ -242,9 +249,7 @@ void genStartCode(ParserNode *node, SymbolTable *table)
     asmOut << "END main\n";
     asmOut.close();
     offsetmap.clear();
-   optimizeCode(CODE_FILE_NAME,OPT_CODE_FILE_NAME);
-  
-
+    optimizeCode(CODE_FILE_NAME, OPT_CODE_FILE_NAME);
 }
 
 ///////////////////////////////////////////////
@@ -256,11 +261,12 @@ public:
         : ParserNode(firstLine, lastLine, matchedRule, dataType, value)
     {
     }
-    void processCode(ofstream &asmOut)
+    void processCode(ofstream &asmOut, bool conditionality, bool &needed)
     {
+        //printDebug(this, conditionality, needed);
         for (auto x : this->getSubordinate())
         {
-            x->processCode(asmOut);
+            x->processCode(asmOut, conditionality, needed);
         }
 
         if (this->isGlobalScope() == false)
@@ -366,12 +372,13 @@ public:
     {
         // parameterCount = 0;
     }
-    void processCode(ofstream &asmOut)
+    void processCode(ofstream &asmOut, bool conditionality, bool &needed)
     {
+        //printDebug(this, conditionality, needed);
         genFunctioninitCode();
         for (auto x : this->getSubordinate())
         {
-            x->processCode(asmOut);
+            x->processCode(asmOut, conditionality, needed);
         }
 
         funcCompleted();
@@ -419,12 +426,12 @@ public:
         : ParserNode(firstLine, lastLine, matchedRule, dataType, value)
     {
     }
-    void processCode(ofstream &out)
+    void processCode(ofstream &out, bool conditionality, bool &needed)
     {
-
+        //printDebug(this, conditionality, needed);
         for (auto x : this->getSubordinate())
         {
-            x->processCode(out);
+            x->processCode(out, conditionality, needed);
         }
         varHandler(out);
     }
@@ -461,11 +468,12 @@ public:
         // //cout<<"setOperator done\n";
         return this;
     }
-    void processCode(ofstream &out)
+    void processCode(ofstream &out, bool conditionality, bool &needed)
     {
+        //printDebug(this, conditionality, needed);
         for (auto x : this->getSubordinate())
         {
-            x->processCode(out);
+            x->processCode(out, conditionality, needed);
         }
 
         ParserNode *node = getSubordinateNth(1);
@@ -513,11 +521,12 @@ public:
         : factor(firstLine, lastLine, matchedRule, dataType, value)
     {
     }
-    void processCode(ofstream &out)
+    void processCode(ofstream &out, bool conditionality, bool &needed)
     {
+        //printDebug(this, conditionality, needed);
         for (auto x : this->getSubordinate())
         {
-            x->processCode(out);
+            x->processCode(out, conditionality, needed);
         }
 
         ParserNode *var = this->getSubordinateNth(1);
@@ -552,11 +561,11 @@ public:
     {
         // //cout<<"int_factor constructor\n";
     }
-    void processCode(ofstream &out)
+    void processCode(ofstream &out, bool conditionality, bool &needed)
     {
 
         // ParserNode* var=this->getSubordinateNth(1);
-
+        //printDebug(this, conditionality, needed);
         SymbolInfo *si = this->getSymbolInfo();
         // //cout<<" constant "<<*si<<endl;
         out << "\tMOV AX, " << si->getName() << endl;
@@ -571,21 +580,21 @@ public:
         : factor(firstLine, lastLine, matchedRule, dataType, value)
     {
     }
-    void processCode(ofstream &out)
+    void processCode(ofstream &out, bool conditionality, bool &needed)
     {
-
+        //printDebug(this, conditionality, needed);
         this->copyLabelsToChild(2);
         bool neededBefore = needed;
         //    needed=false;
 
-        // out << ";----------------------------------------------------------------setting needed false for factor:lp exp rp";
+        // //out<<";----------------------------------------------------------------setting needed false for factor:lp exp rp";
 
         ParserNode *pn = this->getSubordinateNth(2);
         // //cout<<"fact (E)"<<" "<<pn->getTrueLabel()<<" "<<pn->getFalseLabel()<<pn->getNextLabel()<<endl;
-
+        // needed=false;
         for (auto x : this->getSubordinate())
         {
-            x->processCode(out);
+            x->processCode(out, conditionality, needed);
         }
 
         // needed=neededBefore;
@@ -599,12 +608,13 @@ public:
     {
         //////cout<<"funcCall_factor constructor------------------------------\n"<<endl;
     }
-    void processCode(ofstream &out)
+    void processCode(ofstream &out, bool conditionality, bool &needed)
     {
         //////cout<<"funcCall_factor processCode ----------------------------------------------------------------\n"<<endl;
+        //printDebug(this, conditionality, needed);
         for (auto x : this->getSubordinate())
         {
-            x->processCode(out);
+            x->processCode(out, conditionality, needed);
         }
         string name = this->getSymbolInfo()->getName();
 
@@ -637,12 +647,13 @@ public:
         : unary_expression(firstLine, lastLine, matchedRule, dataType, value)
     {
     }
-    void processCode(ofstream &out)
+    void processCode(ofstream &out, bool conditionality, bool &needed)
     {
+        //printDebug(this, conditionality, needed);
         copyLabelsToChild(2);
         for (auto x : this->getSubordinate())
         {
-            x->processCode(out);
+            x->processCode(out, conditionality, needed);
         }
 
         if (this->getOperator() == "-")
@@ -661,12 +672,15 @@ public:
         : unary_expression(firstLine, lastLine, matchedRule, dataType, value)
     {
     }
-    void processCode(ofstream &out)
+    void processCode(ofstream &out, bool conditionality, bool &needed)
     {
+        //printDebug(this, conditionality, needed);
+
+
         this->copyOppositeLabelsToChild(2);
         for (auto x : this->getSubordinate())
         {
-            x->processCode(out);
+            x->processCode(out, conditionality, needed);
         }
 
         if (this->getTrueLabel() == "")
@@ -693,7 +707,7 @@ public:
 
         // genCode("POP AX");
 
-      cout << "cond, tC =" << conditionality <<" ,"<< this->getConditionality() << " : " << this->getRule() << " " << this->getFirstLine() << endl;
+        //cout << "cond, tC =" << conditionality << " ," << this->getConditionality() << " : " << this->getRule() << " " << this->getFirstLine() << endl;
 
         if (!conditionality)
         {
@@ -751,13 +765,14 @@ public:
     {
     }
 
-    void processCode(ofstream &out)
+    void processCode(ofstream &out, bool conditionality, bool &needed)
     {
+        //printDebug(this, conditionality, needed);
         copyLabelsToChild(1);
         copyLabelsToChild(3);
         for (auto x : this->getSubordinate())
         {
-            x->processCode(out);
+            x->processCode(out, conditionality, needed);
         }
         pop("BX");
         pop("AX");
@@ -794,14 +809,15 @@ public:
     {
     }
 
-    void processCode(ofstream &out)
+    void processCode(ofstream &out, bool conditionality, bool &needed)
     {
+        //printDebug(this, conditionality, needed);
         copyLabelsToChild(1);
         copyLabelsToChild(3);
 
         for (auto x : this->getSubordinate())
         {
-            x->processCode(out);
+            x->processCode(out, conditionality, needed);
         }
         pop("BX");
         pop("AX");
@@ -857,14 +873,15 @@ public:
         : expression(firstLine, lastLine, matchedRule, dataType, value)
     {
     }
-    void processCode(ofstream &out)
+    void processCode(ofstream &out, bool conditionality, bool &needed)
     {
+        //printDebug(this, conditionality, needed);
         copyLabelsToChild(3);
 
         for (int i = this->getSubordinate().size(); i > 0; i--)
         {
             ParserNode *x = getSubordinateNth(i);
-            x->processCode(out);
+            x->processCode(out, conditionality, needed);
         }
 
         assignHandler(out);
@@ -878,13 +895,14 @@ public:
         : ParserNode(firstLine, lastLine, matchedRule, dataType, value)
     {
     }
-    void processCode(ofstream &out)
+    void processCode(ofstream &out, bool conditionality, bool &needed)
     {
+        //printDebug(this, conditionality, needed);
         copyLabelsToChild(1);
 
         for (auto x : this->getSubordinate())
         {
-            x->processCode(out);
+            x->processCode(out, conditionality, needed);
         }
         pop("AX");
     }
@@ -908,11 +926,12 @@ public:
     {
     }
 
-    void processCode(ofstream &out)
+    void processCode(ofstream &out, bool conditionality, bool &needed)
     {
+        //printDebug(this, conditionality, needed);
         for (auto x : this->getSubordinate())
         {
-            x->processCode(out);
+            x->processCode(out, conditionality, needed);
         }
         // string name=this->getSymbolInfo()->getName();
 
@@ -972,7 +991,7 @@ class simp_relop_simp_relexp : public rel_expression
     // string genJump(string label,string ji="JMP"){
 
     // }
-    void relHandler()
+    void relHandler(bool conditionality)
     {
         // cout << "relHandler called" << endl;
         // cout << "operator: " << getOperator() << endl;
@@ -994,7 +1013,7 @@ class simp_relop_simp_relexp : public rel_expression
         genCode("CMP AX, DX");
 
         // cout << "btrue ,bfalse = " << btrue << " " << bfalse << endl;
-      cout << "cond, tC =" << conditionality <<" ,"<< this->getConditionality() << " : " << this->getRule() << " " << this->getFirstLine() << endl;
+       // cout << "cond, tC =" << conditionality << " ," << this->getConditionality() << " : " << this->getRule() << " " << this->getFirstLine() << endl;
         if (conditionality)
         {
             string label1 = btrue;
@@ -1034,7 +1053,7 @@ class simp_relop_simp_relexp : public rel_expression
         // }
 
         // if not called from if,else,loop
-      cout << "cond, tC =" << conditionality <<" ,"<< this->getConditionality() << " : " << this->getRule() << " " << this->getFirstLine() << endl;
+      //  cout << "cond, tC =" << conditionality << " ," << this->getConditionality() << " : " << this->getRule() << " " << this->getFirstLine() << endl;
         if (!conditionality)
         {
 
@@ -1073,23 +1092,31 @@ public:
         : rel_expression(firstLine, lastLine, matchedRule, dataType, value)
     {
     }
-    void processCode(ofstream &out)
+    void processCode(ofstream &out, bool conditionality, bool &needed)
     {
+        //printDebug(this, conditionality, needed);
         copyNextLabelsToChild(1);
         copyNextLabelsToChild(3);
 
         // cout << "-------------------------------- simp rel simp called--------------------------------" << endl;
         // cout << "is conditional = " << conditionality << endl;
+        needed = false;
+        // //out<<";needed being turned off by "<<getRule()<<endl;
         for (auto x : this->getSubordinate())
         {
             // needed = false;
             // //genCode(";calling simp rel simp ,here ");
-            // out << ";before simp rel simp : needed is : " << needed << endl;
-            x->processCode(out);
+            // //out<<";before simp rel simp : needed is : " << needed << endl;
+            needed = false;
+            // //out<<";needed being turned off by "<<getRule()<<endl;
+            x->processCode(out, conditionality, needed);
             // needed = true;
         }
+
+        relHandler(conditionality);
+        //out<<";needed being turned off by " << getRule() << endl;
         needed = false;
-        relHandler();
+
         // cout << "exiting relop " << endl;
     }
 };
@@ -1110,19 +1137,111 @@ public:
         : logic_expression(firstLine, lastLine, matchedRule, dataType, value)
     {
     }
-    void processCode(ofstream &out)
+    void processCode(ofstream &out, bool conditionality, bool &needed)
     {
+        //printDebug(this, conditionality, needed);
         copyLabelsToChild(1);
 
+        if (conditionality && needed)
+        {
+            vector<ParserNode *> children = this->getSubordinate();
+            int grandchild0 = children[0]->getSubordinateCount();
+
+            if (grandchild0 != 1)
+            {
+                needed = false;
+            }
+            else
+              {
+                  needed = true;
+                //out<<"; needed turned on by "<<this->getRule()<<endl;
+
+              }
+            // needed = true;
+        }
         for (auto x : this->getSubordinate())
         {
-            x->processCode(out);
+            x->processCode(out, conditionality, needed);
         }
+
+        if (conditionality && needed)
+        {
+
+            string btrue = this->getTrueLabel();
+            string bfalse = this->getFalseLabel();
+
+            // pop("DX");
+
+            // cout << "btrue ,bfalse = " << btrue << " " << bfalse << endl;
+            genCode(";conditionality of simple exp");
+            pop("AX");
+            genCode("CMP AX, 0");
+            string label1 = btrue;
+            string label2 = bfalse;
+
+            if (btrue != "fall" && bfalse != "fall")
+            {
+
+                genCode("JNE " + label1);
+                genCode("JMP " + label2);
+            }
+            else if (btrue != "fall")
+            {
+
+                genCode("JNE " + label1);
+            }
+            else if (bfalse != "fall")
+            {
+                // genCode(""+getFalseJumpInstruction()+" "+bfalse);
+                genCode("JE " + label2);
+            }
+            needed = false;
+            //out<<"; needed being turned off by 1182" << getRule() << endl;
+        }
+
+        // vector<ParserNode *> children = this->getSubordinate();
+        // int grandchild0 = children[0]->getSubordinateCount();
+
+        // if (grandchild0 != 1)
+        // {
+        //     needed=false;
+
+        // }
+        // else needed = true;
+        // children[0]->processCode(out, conditionality, needed);
     }
 };
 class rel_logicop_rel : public logic_expression
 {
     vector<ParserNode *> children;
+
+    void actionNeeded(string btrue, string bfalse, bool &needed)
+    {
+        pop("AX");
+        genCode("CMP AX, 0");
+        string label1 = btrue;
+        string label2 = bfalse;
+
+        if (btrue != "fall" && bfalse != "fall")
+        {
+
+            genCode("JNE " + label1);
+            genCode("JMP " + label2);
+        }
+        else if (btrue != "fall")
+        {
+
+            genCode("JNE " + label1);
+        }
+        else if (bfalse != "fall")
+        {
+            // genCode(""+getFalseJumpInstruction()+" "+bfalse);
+            genCode("JE " + label2);
+        }
+        needed = false;
+        //genCode(";needed being turned off locally");
+    }
+
     void orHandler()
     {
 
@@ -1205,7 +1324,7 @@ class rel_logicop_rel : public logic_expression
             genCode(children[0]->getFalseLabel() + ":\n", false);
         }
     }
-    void Coder()
+    void Coder(bool conditionality)
     {
         if (getOperator() == "&&")
         {
@@ -1215,7 +1334,7 @@ class rel_logicop_rel : public logic_expression
         {
             orCoder();
         }
-        cout << "cond, tC =" << conditionality <<" ,"<< this->getConditionality() << " : " << this->getRule() << " " << this->getFirstLine() << endl;
+        //  cout << "cond, tC =" << conditionality << " ," << this->getConditionality() << " : " << this->getRule() << " " << this->getFirstLine() << endl;
 
         if (!conditionality)
         {
@@ -1238,49 +1357,89 @@ public:
         : logic_expression(firstLine, lastLine, matchedRule, dataType, value)
     {
     }
-    void processCode(ofstream &out)
+    void processCode(ofstream &out, bool conditionality, bool &needed)
     {
+        //printDebug(this, conditionality, needed);
         bool conditionalitybefore = conditionality;
         if (getTrueLabel() == "")
         {
             setTrueLabel(getNewLabel());
-            // out<<";created new TrueLabel ="<<getTrueLabel()<<"for rel logicop rel\n";
+            // //out<<";created new TrueLabel ="<<getTrueLabel()<<"for rel logicop rel\n";
         }
         if (getFalseLabel() == "")
         {
             setFalseLabel(getNewLabel());
-            // out<<";created new FalseLabel ="<<getFalseLabel()<<"for rel logicop rel\n";
+            // //out<<";created new FalseLabel ="<<getFalseLabel()<<"for rel logicop rel\n";
         }
 
         LabelHandler(); // set inherited labels to children
-        int i = 0;
-        for (auto x : this->getSubordinate())
+
+        // int i = 0;
+        // for (auto x : this->getSubordinate())
+        // {
+        //     conditionality = true;
+        //     setConditonalityToChild(i + 1, true);
+        //     bool neededBefore = needed;
+        //     // //out<<";" << x->getSubordinateCount() << " children\n";
+        //     //  //out<<";before processing : "
+        //     if (i != 1)
+        //     {
+        //         if (x->getSubordinateCount() > 1)
+        //         {
+        //             genCode(";setting needed false for " + x->getRule());
+        //             needed = false;
+        //         }
+        //         else if (x->getSubordinateCount() == 1)
+        //         {
+        //             genCode(";setting needed true for " + x->getRule());
+        //             needed = true;
+        //         }
+        //     }
+        //     x->processCode(out, conditionality, needed);
+        //     //   needed=neededBefore;
+        //     conditionality = false;
+        //     i++;
+        // }
+        // conditionality = conditionalitybefore;
+
+        vector<ParserNode *> children = this->getSubordinate();
+        int grandchild0 = children[0]->getSubordinateCount();
+        int grandchild2 = children[2]->getSubordinateCount();
+        //out<<"; gc0,gc2 =" << grandchild0 << "," << grandchild2 << endl;
+        bool n1 = needed;
+        bool n2 = needed;
+
+        if (grandchild0 != 1)
+            n1 = false;
+        else
+            n1 = true;
+
+        children[0]->processCode(out, true, n1);
+
+        if (n1)
         {
-            conditionality = true;
-            setConditonalityToChild(i + 1, true);
-            bool neededBefore = needed;
-            // out << ";" << x->getSubordinateCount() << " children\n";
-            //  out<<";before processing : "
-            if (i != 1)
-            {
-                if (x->getSubordinateCount() > 1)
-                {
-                    genCode(";setting needed false for " + x->getRule());
-                    needed = false;
-                }
-                else if (x->getSubordinateCount() == 1)
-                {
-                    genCode(";setting needed true for " + x->getRule());
-                    needed = true;
-                }
-            }
-            x->processCode(out);
-            //   needed=neededBefore;
-            conditionality = false;
-            i++;
+            actionNeeded(children[0]->getTrueLabel(), children[0]->getFalseLabel(), n1);
         }
-        conditionality = conditionalitybefore;
-        Coder(); // extra labels
+
+        children[1]->processCode(out, conditionality, needed);
+
+        if (grandchild2 != 1)
+            n2 = false;
+        else
+            n2 = true;
+
+        //out<<";before, n2 =" << n2 << endl;
+        children[2]->processCode(out, true, n2);
+
+        //out<<";after, n2 =" << n2 << endl;
+
+        if (n2)
+        {
+            actionNeeded(children[2]->getTrueLabel(), children[2]->getFalseLabel(), n2);
+        }
+        Coder(conditionality); // extra labels
+        needed = false;
+        //out<<"; needed off by " << this->getRule() << endl;
     }
 };
 
@@ -1292,13 +1451,14 @@ public:
     {
     }
 
-    void processCode(ofstream &out)
+    void processCode(ofstream &out, bool conditionality, bool &needed)
     {
+        //printDebug(this, conditionality, needed);
         copyLabelsToChild(1);
 
         for (auto x : this->getSubordinate())
         {
-            x->processCode(out);
+            x->processCode(out, conditionality, needed);
         }
     }
 };
@@ -1311,8 +1471,9 @@ public:
     {
     }
 
-    void processCode(ofstream &out)
+    void processCode(ofstream &out, bool conditionality, bool &needed)
     {
+        //printDebug(this, conditionality, needed);
         string prevNext = getNextLabel();
         if (getNextLabel() == "")
         {
@@ -1329,7 +1490,7 @@ public:
 
         for (auto x : this->getSubordinate())
         {
-            x->processCode(out);
+            x->processCode(out, conditionality, needed);
         }
         if (prevNext == "")
         {
@@ -1357,13 +1518,14 @@ public:
     {
     }
 
-    void processCode(ofstream &out)
+    void processCode(ofstream &out, bool conditionality, bool &needed)
     {
+        //printDebug(this, conditionality, needed);
         copyLabelsToChild(1);
-        out << ";--------------------------------; LINE " << this->getSubordinateNth(1)->getFirstLine() << endl;
+        out<<";--------------------------------; LINE " << this->getSubordinateNth(1)->getFirstLine() << endl;
         for (auto x : this->getSubordinate())
         {
-            x->processCode(out);
+            x->processCode(out, conditionality, needed);
         }
         // out<<getNextLabel()<<" :\n";
     }
@@ -1377,9 +1539,9 @@ public:
     {
     }
 
-    void processCode(ofstream &out)
+    void processCode(ofstream &out, bool conditionality, bool &needed)
     {
-
+        //printDebug(this, conditionality, needed);
         copyBooleanLabelsToChild(1);
         copyBooleanLabelsToChild(2);
         vector<ParserNode *> children = getSubordinate();
@@ -1392,11 +1554,11 @@ public:
         // children[1]->print();
         setSubordinate(children);
 
-        children[0]->processCode(out);
+        children[0]->processCode(out, conditionality, needed);
 
         out << children[0]->getNextLabel() << ":\n";
-        out << ";--------------------------------; LINE " << children[1]->getFirstLine() << endl;
-        children[1]->processCode(out);
+        out<<";--------------------------------; LINE " << children[1]->getFirstLine() << endl;
+        children[1]->processCode(out, conditionality, needed);
     }
 };
 
@@ -1408,8 +1570,9 @@ public:
     {
     }
 
-    void processCode(ofstream &out)
+    void processCode(ofstream &out, bool conditionality, bool &needed)
     {
+        //printDebug(this, conditionality, needed);
         this->setLabelsToChild(5, "", "", this->getNextLabel());
         this->setLabelsToChild(3, "fall", this->getNextLabel(), "");
         bool conditionalitybefore = conditionality;
@@ -1419,20 +1582,24 @@ public:
         {
             if (i == 2)
             {
-                conditionality = true;
+                // conditionality = true;
                 setConditonalityToChild(i + 1, true);
+
+                needed=true;
+                x->processCode(out, true, needed);
+                // conditionality = conditionalitybefore;
             }
 
             // cout << x->getRule() << " LINE: " << x->getFirstLine() << x->getTrueLabel() << " " << x->getFalseLabel() << " " << x->getNextLabel() << endl;
-
-            x->processCode(out);
+            else
+                x->processCode(out, conditionality, needed);
 
             // if(i==2){
             //     pop("AX");
             // }
 
             i++;
-            conditionality = false;
+            // conditionality = false;
         }
         conditionality = conditionalitybefore;
     }
@@ -1446,8 +1613,9 @@ public:
     {
     }
 
-    void processCode(ofstream &out)
+    void processCode(ofstream &out, bool conditionality, bool &needed)
     {
+        //printDebug(this, conditionality, needed);
         this->setLabelsToChild(5, "", "", this->getNextLabel());
         this->setLabelsToChild(7, "", "", this->getNextLabel());
         bool conditionalitybefore = conditionality;
@@ -1461,15 +1629,20 @@ public:
         {
             if (i == 2)
             {
-                conditionality = true;
+                // conditionality = true;
                 setConditonalityToChild(i + 1, true);
                 btrue = x->getTrueLabel();
                 bfalse = x->getFalseLabel();
+
+                needed=true;
+                x->processCode(out, true, needed);
             }
 
             // cout << x->getRule() << " LINE: " << x->getFirstLine() << x->getTrueLabel() << " " << x->getFalseLabel() << " " << x->getNextLabel() << endl;
-
-            x->processCode(out);
+            else
+            {
+                x->processCode(out, conditionality, needed);
+            }
 
             // if(i==2){
             //     pop("AX");
@@ -1482,7 +1655,7 @@ public:
             }
 
             i++;
-            conditionality = false;
+            // conditionality = false;
         }
         conditionality = conditionalitybefore;
     }
@@ -1496,35 +1669,76 @@ public:
     {
     }
 
-    void processCode(ofstream &out)
+        void processCode(ofstream &out, bool conditionality, bool &needed)
     {
+        //printDebug(this, conditionality, needed);
         string loop = getNewLabel();
         string exec = getNewLabel();
+        string incdec=getNewLabel();
         bool conditionalitybefore = conditionality;
 
         setLabelsToChild(4, exec, getNextLabel(), "");
-        setLabelsToChild(7, "", "", loop);
+        setLabelsToChild(7, "", "", incdec);
+        setLabelsToChild(5,"","",loop);
 
         vector<ParserNode *> children = this->getSubordinate();
 
-        children[2]->processCode(out);
+        children[2]->processCode(out, conditionality, needed);
         out << loop << ":\n";
 
-        conditionality = true;
+        // conditionality = true;
         setConditonalityToChild(3 + 1, true);
-        children[3]->processCode(out);
-        conditionality = false;
+
+        needed=true;
+        children[3]->processCode(out, true, needed);
+        // conditionality = false;
 
         out << children[3]->getTrueLabel() << ":\n";
-        children[6]->processCode(out);
+        children[6]->processCode(out, conditionality, needed);
+        genCode("JMP "+children[6]->getNextLabel());
 
-        children[4]->processCode(out);
+        out<<incdec<<":\n";
 
-        genCode(";popping for expression from for");
+        children[4]->processCode(out, conditionality, needed);
+
+       // genCode(";popping for expression from for");
         pop("AX");
-        genCode("JMP " + loop);
+        genCode("JMP " + children[4]->getNextLabel());
         conditionality = conditionalitybefore;
     }
+
+    // void processCode(ofstream &out, bool conditionality, bool &needed)
+    // {
+    //     //printDebug(this, conditionality, needed);
+    //     string loop = getNewLabel();
+    //     string exec = getNewLabel();
+    //     bool conditionalitybefore = conditionality;
+
+    //     setLabelsToChild(4, exec, getNextLabel(), "");
+    //     setLabelsToChild(7, "", "", loop);
+
+    //     vector<ParserNode *> children = this->getSubordinate();
+
+    //     children[2]->processCode(out, conditionality, needed);
+    //     out << loop << ":\n";
+
+    //     // conditionality = true;
+    //     setConditonalityToChild(3 + 1, true);
+
+    //     needed=true;
+    //     children[3]->processCode(out, true, needed);
+    //     // conditionality = false;
+
+    //     out << children[3]->getTrueLabel() << ":\n";
+    //     children[6]->processCode(out, conditionality, needed);
+
+    //     children[4]->processCode(out, conditionality, needed);
+
+    //     genCode(";popping for expression from for");
+    //     pop("AX");
+    //     genCode("JMP " + loop);
+    //     conditionality = conditionalitybefore;
+    // }
 };
 
 class while_statement : public statement
@@ -1535,8 +1749,11 @@ public:
     {
     }
 
-    void processCode(ofstream &out)
+
+
+    void processCode(ofstream &out, bool conditionality, bool &needed)
     {
+        //printDebug(this, conditionality, needed);
         string begin = getNewLabel();
         this->setLabelsToChild(5, "", "", begin, true);
         this->setLabelsToChild(3, "fall", this->getNextLabel(), "", true);
@@ -1548,12 +1765,15 @@ public:
         {
             if (i == 2)
             {
-                conditionality = true;
-                setConditonalityToChild(i + 1, true);
-                out << ";" << x->getRule() << " LINE: " << x->getFirstLine() << x->getTrueLabel() << " " << x->getFalseLabel() << " " << x->getNextLabel() << endl;
-            }
 
-            x->processCode(out);
+                needed=true;
+                x->processCode(out, true, needed);
+                // conditionality = true;
+                setConditonalityToChild(i + 1, true);
+                //out<<";" << x->getRule() << " LINE: " << x->getFirstLine() << x->getTrueLabel() << " " << x->getFalseLabel() << " " << x->getNextLabel() << endl;
+            }
+            else
+                x->processCode(out, conditionality, needed);
 
             // if(i==2){
 
@@ -1566,7 +1786,7 @@ public:
             }
 
             i++;
-            conditionality = false;
+            // conditionality = false;
         }
         conditionality = conditionalitybefore;
     }
@@ -1580,11 +1800,12 @@ public:
         : statement(firstLine, lastLine, matchedRule, dataType, value)
     {
     }
-    void processCode(ofstream &out)
+    void processCode(ofstream &out, bool conditionality, bool &needed)
     {
+        //printDebug(this, conditionality, needed);
         for (auto x : this->getSubordinate())
         {
-            x->processCode(out);
+            x->processCode(out, conditionality, needed);
         }
         pop("AX");
         string to_exit = "";
@@ -1617,12 +1838,12 @@ class simp_relexp : public rel_expression
     // string genJump(string label,string ji="JMP"){
 
     // }
-    void relHandler()
+    void relHandler(bool conditionality, bool &needed)
     {
         // //cout << "relHandler called" << endl;
         // //cout << "operator: " << getOperator() << endl;
         genCode(";--------------------------------cond,need = " + to_string(conditionality) + " ," + to_string(needed));
-        cout << "conditionality ,tC = " << conditionality << " , " << this->getConditionality() <<": "<<this->getRule()<<" : "<<this->getFirstLine()<< endl;
+        cout << "conditionality ,tC = " << conditionality << " , " << this->getConditionality() << ": " << this->getRule() << " : " << this->getFirstLine() << endl;
 
         if (conditionality && needed)
         {
@@ -1670,6 +1891,7 @@ class simp_relexp : public rel_expression
             genCode(";-------------------------------- simp of rel done--------------------------------\n");
         }
         needed = false;
+        // out<<"needed off by "<<getRule()<<endl;
 
         // if not called from if,else,loop
         // if (!conditionality)
@@ -1699,22 +1921,23 @@ public:
         : rel_expression(firstLine, lastLine, matchedRule, dataType, value)
     {
     }
-    void processCode(ofstream &out)
+    void processCode(ofstream &out, bool conditionality, bool &needed)
     {
+        //printDebug(this, conditionality, needed);
         copyLabelsToChild(1);
         // copyNextLabelsToChild(3);
 
         // //cout << "-------------------------------- simp of rel called--------------------------------" << endl;
         //  //cout << "is conditional = " << conditionality << endl;
-        // //out << ";--------------------------------simp_rel\n";
-        // out << ";needed for simp relexp = " << needed << endl;
+        // ////out<<";--------------------------------simp_rel\n";
+        // //out<<";needed for simp relexp = " << needed << endl;
         for (auto x : this->getSubordinate())
         {
 
-            x->processCode(out);
+            x->processCode(out, conditionality, needed);
         }
-        relHandler();
-        // //out << ";--------------------------------simp of rel done" << endl;
+        relHandler(conditionality, needed);
+        // ////out<<";--------------------------------simp of rel done" << endl;
         // cout << "exiting rel: sim" << endl;
     }
 };

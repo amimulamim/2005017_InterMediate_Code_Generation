@@ -1038,7 +1038,7 @@ $$=new_rel_logic(@$,rule,$1->getDataType(),$1->getValue())->addSubordinate($1);
 			
 rel_expression	: simple_expression {
   string rule="rel_expression	: simple_expression ";logRule(rule);
-$$=new_simp_relexp(@$,rule,$1->getDataType(),$1->getValue())->addSubordinate($1);
+$$=parsing(@$,rule,$1->getDataType(),$1->getValue())->addSubordinate($1);
 
 }
 		| simple_expression RELOP simple_expression	{

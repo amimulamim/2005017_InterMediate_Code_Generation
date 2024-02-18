@@ -6,11 +6,13 @@ void mainc();
 void f(int x,int b){
     int p,q,r;
     x=x*3+10;
+    x++;
    println(x);
    // a=17;
    cc(b);
    p=2;
    q=3;
+   q--;
 }
 
 void cc(int a){
@@ -42,6 +44,7 @@ void e(int z){
     z=z*2;
     println(z);
     testing(z*3,10);
+    z++;
     //a=a*4;
 }
 
@@ -104,15 +107,15 @@ void mainc(){
     println(b);
     b=(1>5)||(2>3);
     println(b);
-    // b=(1!=5) && (2!=(3-1));
-    // println(b);
-    //     b=(1!=5) && (2==(3-1));
-    // println(b);
-    //     b=(1!=5) && (2<=(3-1));
-    // println(b);
-    //     b=(1!=5) && (2>=(3-1));
-    // println(b);
-    //     b=(1!=5) && (2>(3-1));
+    b=(1!=5) && (2!=(3-1));
+    println(b);
+        b=(1!=5) && (2==(3-1));
+    println(b);
+        b=(1!=5) && (2<=(3-1));
+    println(b);
+        b=(1!=5) && (2>=(3-1));
+    println(b);
+        b=(1!=5) && (2>(3-1));
     println(b);
     c=19;
     c=((a==1)&&(b==1))+c;

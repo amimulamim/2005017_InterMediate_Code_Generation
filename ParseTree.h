@@ -224,14 +224,14 @@ public:
     }
     SymbolInfo *getSymbolInfo() { return this->symbolInfo; }
 
-    virtual void processCode(ofstream &asmOut)
+    virtual void processCode(ofstream &asmOut,bool conditionality,bool& needed)
     {
         // cout<<"Processing "<<this->getRule()<<"..."<<endl;
         copyLabelsToChild(1);
         for (auto x : this->getSubordinate())
         {
             // processNode(x);
-            x->processCode(asmOut);
+            x->processCode(asmOut,conditionality,needed);
         }
     }
     ParserNode *getSubordinateNth(int n)
@@ -275,6 +275,8 @@ public:
         subordinates[n - 1]->setTrueLabel(falseLabel);
         subordinates[n - 1]->setFalseLabel(trueLabel);
         subordinates[n - 1]->setNextLabel(nextLabel);
+
+        
         return this;
     }
     ParserNode *copyNextLabelsToChild(int n)
