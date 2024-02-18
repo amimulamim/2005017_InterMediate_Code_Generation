@@ -431,6 +431,10 @@ while_statement* new_while_statement(YYLTYPE location, const std::string rule,st
 return (new while_statement(location.first_line,location.last_line,rule,datatype,value));
 }
 
+for_statement* new_for_statement(YYLTYPE location, const std::string rule,string datatype="",string value=""){
+return (new for_statement(location.first_line,location.last_line,rule,datatype,value));
+}
+
 if_else_statement* new_if_else_statement(YYLTYPE location, const std::string rule,string datatype="",string value=""){
 return (new if_else_statement(location.first_line,location.last_line,rule,datatype,value));
 }
@@ -910,7 +914,7 @@ parameter_list  : parameter_list COMMA type_specifier ID{
 	  | FOR LPAREN expression_statement expression_statement expression RPAREN statement{
       string rule="statement : FOR LPAREN expression_statement expression_statement expression RPAREN statement";
       logRule(rule);
-      $$=parsing(@$,rule)->addSubordinate(parsing(@1,FOR_R))->addSubordinate(parsing(@2,LPAREN_R))->addSubordinate($3)->addSubordinate($4)->addSubordinate($5)->addSubordinate(parsing(@6,RPAREN_R))->addSubordinate($7);
+      $$=new_for_statement(@$,rule)->addSubordinate(parsing(@1,FOR_R))->addSubordinate(parsing(@2,LPAREN_R))->addSubordinate($3)->addSubordinate($4)->addSubordinate($5)->addSubordinate(parsing(@6,RPAREN_R))->addSubordinate($7);
 
     }
 	  | IF LPAREN expression RPAREN statement{

@@ -10,6 +10,10 @@
 #include <stack>
 #include "SymbolTable/SymbolTable.h"
 #include "ParseTree.h"
+#include"optUtil.h"
+
+#define CODE_FILE_NAME "code.asm"
+#define OPT_CODE_FILE_NAME "optcode.asm"
 
 bool conditionality = false;
 // bool returned = false;
@@ -27,10 +31,10 @@ void printOffsetMap()
     {
         for (auto x : offsetmap[i])
         {
-            cout << "(" << x.first << ", " << x.second << ")"
-                 << "  ";
+            // cout << "(" << x.first << ", " << x.second << ")"
+            //<< "  ";
         }
-        cout << endl;
+        // cout << endl;
     }
 }
 
@@ -119,7 +123,7 @@ int getVariableOffset(string vname)
         auto it = mp.find(vname);
         if (it != mp.end())
         {
-            // cout<<"returning "<<it->second<<" for "<<vname<<endl;
+            // //cout<<"returning "<<it->second<<" for "<<vname<<endl;
             return it->second;
         }
         idx--;
@@ -135,39 +139,7 @@ string getVarAddressName(string vname)
     return "[BP" + (offset ? ((offset > 0 ? "-" : "+") + to_string(abs(offset))) : "") + "]";
 }
 
-std::string trim(const std::string &str)
-{
-    size_t start = str.find_first_not_of(" \t\n\r\f\v");
 
-    if (start == std::string::npos)
-    {
-        return "";
-    }
-    size_t end = str.find_last_not_of(" \t\n\r\f\v");
-
-    std::string trimmed = str.substr(start, end - start + 1);
-
-    bool inWhitespace = false;
-    string ret = "";
-    for (char c : trimmed)
-    {
-        if (std::isspace(c))
-        {
-            if (!inWhitespace)
-            {
-                ret.push_back(' ');
-                inWhitespace = true;
-            }
-        }
-        else
-        {
-            ret.push_back(c);
-            inWhitespace = false;
-        }
-    }
-
-    return ret;
-}
 void PrintNewLabel()
 {
     asmOut << "Label" << label++ << " : " << endl;
@@ -200,7 +172,7 @@ void push(std::string reg, std::string comment = "")
            << "PUSH " << reg;
     if (comment.length() > 0)
     {
-        cout << " ; " << comment;
+        // cout << " ; " << comment;
     }
     stack_excess++;
 
@@ -213,7 +185,7 @@ void push(int val, std::string comment = "")
            << "PUSH " << val;
     if (comment.length() > 0)
     {
-        cout << " ; " << comment;
+        asmOut << " ; " << comment;
     }
     asmOut << endl;
     stack_excess++;
@@ -223,15 +195,17 @@ void pop(std::string reg, std::string comment = "")
 {
     asmOut << "\t"
            << "POP " << reg;
-    if (comment.length() > 0)
-        cout << " ; " << comment;
-    asmOut << endl;
+    if (comment.length() > 0){
+        asmOut << "; " << comment;
+    }
+      
+        asmOut << endl;
     stack_excess--;
 }
 
 void genStartCode(ParserNode *node, SymbolTable *table)
 {
-    asmOut.open("code.asm");
+    asmOut.open(CODE_FILE_NAME);
     string c = ".MODEL SMALL\n\
 .STACK 1000H\n\
 .Data\n\
@@ -268,6 +242,9 @@ void genStartCode(ParserNode *node, SymbolTable *table)
     asmOut << "END main\n";
     asmOut.close();
     offsetmap.clear();
+   optimizeCode(CODE_FILE_NAME,OPT_CODE_FILE_NAME);
+  
+
 }
 
 ///////////////////////////////////////////////
@@ -294,9 +271,9 @@ public:
 
                 asmOut << "\tSUB SP," << si->getWidth() << endl;
                 stack_offset += si->getWidth();
-                // cout<<"before mapping \n";
+                // //cout<<"before mapping \n";
                 addToOffsetMap(si->getName(), stack_offset);
-                // cout<<"after mapping \n";
+                // //cout<<"after mapping \n";
             }
         }
     }
@@ -324,17 +301,17 @@ class func_definition : public ParserNode
         //////////////////////change after compound_statement,then exclude it
         offsetmap.push_back(map<string, int>());
 
-        // cout << "si = " << *(this->getSymbolInfo()) << endl;
+        // //cout << "si = " << *(this->getSymbolInfo()) << endl;
         params = this->getSymbolInfo()->getParameters();
-        // cout << "params: " << params.size() << endl;
+        // //cout << "params: " << params.size() << endl;
         int offx = -4;
         ///////////////////////////params upore thake,caller push kore..so -(-) e + hobe
         for (int i = params.size() - 1; i >= 0; i--)
         {
             string parName = params[i]->getName();
-            // cout<<"adding to offset map : "<<parName<<" "<<offx<<" from "<<func_name<<endl;
+            // //cout<<"adding to offset map : "<<parName<<" "<<offx<<" from "<<func_name<<endl;
             addToOffsetMap(parName, offx);
-            // cout<<"offx for "<<parName<<" is "<<offx<<endl;
+            // //cout<<"offx for "<<parName<<" is "<<offx<<endl;
             offx -= 2;
         }
     }
@@ -346,11 +323,11 @@ class func_definition : public ParserNode
         // printLabel(func_name+"_Exit");
         printLabel(getNewLabel());
 
-        cout << "stack excess: -------------------------------- of " << func_name << " : " << stack_excess << endl;
-        cout << "stack excess: -------------------------------- of " << func_name << " : " << stack_excess << endl;
-        // for(int i=0; i<stack_excess; i++){
-        //     pop("DX");
-        // }
+        // cout << "stack excess: -------------------------------- of " << func_name << " : " << stack_excess << endl;
+        // cout << "stack excess: -------------------------------- of " << func_name << " : " << stack_excess << endl;
+        //  for(int i=0; i<stack_excess; i++){
+        //      pop("DX");
+        //  }
         stack_excess = 0;
         if (stack_offset > 0)
         {
@@ -376,7 +353,7 @@ class func_definition : public ParserNode
         genCode(func_name + " ENDP\n\n");
 
         // if(stack_offset > 0){
-        //   cout<<"popping for "<<func_name<<endl;
+        //   //cout<<"popping for "<<func_name<<endl;
         offsetmap.pop_back();
 
         // }
@@ -408,7 +385,7 @@ class variable : public ParserNode
     {
 
         SymbolInfo *si = this->getSymbolInfo();
-        // cout<<"-------------------------------- variable: "<<*si<<endl;
+        // //cout<<"-------------------------------- variable: "<<*si<<endl;
         if (si->isArray())
         {
             if (getVariableOffset(si->getName()) == -1)
@@ -470,18 +447,18 @@ public:
         : factor(firstLine, lastLine, matchedRule, dataType, value)
     {
         op = "INC";
-        // cout<<"varINCDEC construction\n";
+        // //cout<<"varINCDEC construction\n";
     }
     var_incDec *setOperator(string op)
     {
-        // cout<<"setOperator = "<<op<<endl;
+        // //cout<<"setOperator = "<<op<<endl;
         if (op == "--")
         {
             this->op = "DEC";
         }
         else
             this->op = "INC";
-        // cout<<"setOperator done\n";
+        // //cout<<"setOperator done\n";
         return this;
     }
     void processCode(ofstream &out)
@@ -494,7 +471,7 @@ public:
         ParserNode *node = getSubordinateNth(1);
         SymbolInfo *sym = node->getSymbolInfo();
 
-        // cout<<"operator is : "<<op<<" at line = "<<this->getFirstLine()<<endl;
+        // //cout<<"operator is : "<<op<<" at line = "<<this->getFirstLine()<<endl;
 
         if (!sym->isArray())
         {
@@ -545,7 +522,7 @@ public:
 
         ParserNode *var = this->getSubordinateNth(1);
         SymbolInfo *si = var->getSymbolInfo();
-        // cout<<"-------------------------------- variable_factor: "<<*si<<endl;
+        // //cout<<"-------------------------------- variable_factor: "<<*si<<endl;
         if (si->isArray())
         {
             if (getVariableOffset(si->getName()) == -1)
@@ -573,7 +550,7 @@ public:
     int_factor(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
         : factor(firstLine, lastLine, matchedRule, dataType, value)
     {
-        // cout<<"int_factor constructor\n";
+        // //cout<<"int_factor constructor\n";
     }
     void processCode(ofstream &out)
     {
@@ -581,7 +558,7 @@ public:
         // ParserNode* var=this->getSubordinateNth(1);
 
         SymbolInfo *si = this->getSymbolInfo();
-        // cout<<" constant "<<*si<<endl;
+        // //cout<<" constant "<<*si<<endl;
         out << "\tMOV AX, " << si->getName() << endl;
         push("AX");
     }
@@ -604,7 +581,7 @@ public:
         // out << ";----------------------------------------------------------------setting needed false for factor:lp exp rp";
 
         ParserNode *pn = this->getSubordinateNth(2);
-        // cout<<"fact (E)"<<" "<<pn->getTrueLabel()<<" "<<pn->getFalseLabel()<<pn->getNextLabel()<<endl;
+        // //cout<<"fact (E)"<<" "<<pn->getTrueLabel()<<" "<<pn->getFalseLabel()<<pn->getNextLabel()<<endl;
 
         for (auto x : this->getSubordinate())
         {
@@ -620,11 +597,11 @@ public:
     funcCall_factor(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
         : factor(firstLine, lastLine, matchedRule, dataType, value)
     {
-        ////cout<<"funcCall_factor constructor------------------------------\n"<<endl;
+        //////cout<<"funcCall_factor constructor------------------------------\n"<<endl;
     }
     void processCode(ofstream &out)
     {
-        ////cout<<"funcCall_factor processCode ----------------------------------------------------------------\n"<<endl;
+        //////cout<<"funcCall_factor processCode ----------------------------------------------------------------\n"<<endl;
         for (auto x : this->getSubordinate())
         {
             x->processCode(out);
@@ -633,8 +610,8 @@ public:
 
         genCode("CALL " + name);
         string retType = this->getSymbolInfo()->getVarType();
-        // cout<<"calling f= "<<*this->getSymbolInfo()<<endl;
-        // cout<<"rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrtype of   "<<name<<" : "<<retType<<endl;
+        // //cout<<"calling f= "<<*this->getSymbolInfo()<<endl;
+        // //cout<<"rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrtype of   "<<name<<" : "<<retType<<endl;
         // if (retType != "VOID")
         // {
         //     push("AX"); // return value pushing
@@ -715,6 +692,8 @@ public:
         // genCode(label2 + ":");
 
         // genCode("POP AX");
+
+      cout << "cond, tC =" << conditionality <<" ,"<< this->getConditionality() << " : " << this->getRule() << " " << this->getFirstLine() << endl;
 
         if (!conditionality)
         {
@@ -853,7 +832,7 @@ class var_assignop_logic : public expression
     {
         pop("AX");
         SymbolInfo *si = this->getSubordinateNth(1)->getSymbolInfo();
-        // cout<<"-------------------------------- variable assignop : "<<*si<<endl;
+        // //cout<<"-------------------------------- variable assignop : "<<*si<<endl;
         if (si->isArray())
         {
             if (getVariableOffset(si->getName()) == -1)
@@ -892,21 +871,23 @@ public:
     }
 };
 
-class expression_expression_statement : public ParserNode{
-   public:
-        expression_expression_statement(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
+class expression_expression_statement : public ParserNode
+{
+public:
+    expression_expression_statement(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
         : ParserNode(firstLine, lastLine, matchedRule, dataType, value)
     {
     }
-    void processCode(ofstream &out){
+    void processCode(ofstream &out)
+    {
         copyLabelsToChild(1);
 
-        for(auto x:this->getSubordinate()){
+        for (auto x : this->getSubordinate())
+        {
             x->processCode(out);
         }
         pop("AX");
     }
-
 };
 
 class statement : public ParserNode
@@ -936,9 +917,9 @@ public:
         // string name=this->getSymbolInfo()->getName();
 
         isPrinterCalled = true;
-        // cout<<"this is a printer\n"<<endl;
+        // //cout<<"this is a printer\n"<<endl;
         SymbolInfo *info = this->getSubordinateNth(3)->getSymbolInfo();
-        // cout<<"println info = "<<*info<<endl;
+        // //cout<<"println info = "<<*info<<endl;
         genCode("MOV AX," + getVarAddressName(info->getName()));
         genCode("CALL println");
     }
@@ -952,7 +933,6 @@ public:
     {
     }
 };
-
 
 class simp_relop_simp_relexp : public rel_expression
 {
@@ -994,8 +974,8 @@ class simp_relop_simp_relexp : public rel_expression
     // }
     void relHandler()
     {
-        cout << "relHandler called" << endl;
-        cout << "operator: " << getOperator() << endl;
+        // cout << "relHandler called" << endl;
+        // cout << "operator: " << getOperator() << endl;
 
         if (this->getTrueLabel() == "")
         {
@@ -1013,7 +993,8 @@ class simp_relop_simp_relexp : public rel_expression
         pop("AX");
         genCode("CMP AX, DX");
 
-        cout << "btrue ,bfalse = " << btrue << " " << bfalse << endl;
+        // cout << "btrue ,bfalse = " << btrue << " " << bfalse << endl;
+      cout << "cond, tC =" << conditionality <<" ,"<< this->getConditionality() << " : " << this->getRule() << " " << this->getFirstLine() << endl;
         if (conditionality)
         {
             string label1 = btrue;
@@ -1053,6 +1034,7 @@ class simp_relop_simp_relexp : public rel_expression
         // }
 
         // if not called from if,else,loop
+      cout << "cond, tC =" << conditionality <<" ,"<< this->getConditionality() << " : " << this->getRule() << " " << this->getFirstLine() << endl;
         if (!conditionality)
         {
 
@@ -1082,7 +1064,7 @@ class simp_relop_simp_relexp : public rel_expression
             // printLabel(nextL);
         }
         // conditionality = false;
-        cout << "relHandling done" << endl;
+        // cout << "relHandling done" << endl;
         // push("AX");
     }
 
@@ -1096,8 +1078,8 @@ public:
         copyNextLabelsToChild(1);
         copyNextLabelsToChild(3);
 
-        cout << "-------------------------------- simp rel simp called--------------------------------" << endl;
-        cout << "is conditional = " << conditionality << endl;
+        // cout << "-------------------------------- simp rel simp called--------------------------------" << endl;
+        // cout << "is conditional = " << conditionality << endl;
         for (auto x : this->getSubordinate())
         {
             // needed = false;
@@ -1108,7 +1090,7 @@ public:
         }
         needed = false;
         relHandler();
-        cout << "exiting relop " << endl;
+        // cout << "exiting relop " << endl;
     }
 };
 
@@ -1163,7 +1145,7 @@ class rel_logicop_rel : public logic_expression
 
     void andHandler()
     {
-        // cout << endl
+        // //cout << endl
         //      << endl
         //      << "andddddddd\n"
         //      << endl
@@ -1200,18 +1182,14 @@ class rel_logicop_rel : public logic_expression
         }
         children[2]->setNextLabel(getNextLabel());
         children[0]->setNextLabel(getNextLabel());
-        // // cout<<"is conditional----------- "<<children[0]->conditionality<<endl;
-        //  cout<<"is conditional----------- "<<children[2]->conditionality<<endl;
+
         this->setSubordinate(children);
-        cout << "after setting isConditionalExp----------- \n";
-        // cout<<"is conditional----------- "<<getSubordinate()[0]->conditionality<<endl;
-        //  cout<<"is conditional----------- "<<getSubordinate()[0]->conditionality<<endl;
     }
 
     void orCoder()
     {
-        cout << "-------------------------------- orcoding\n"
-             << endl;
+        // cout << "-------------------------------- orcoding\n"
+        //<< endl;
         if (getTrueLabel() == "fall")
         {
             // genCode(";ORcoder--------------------------------");
@@ -1237,6 +1215,7 @@ class rel_logicop_rel : public logic_expression
         {
             orCoder();
         }
+        cout << "cond, tC =" << conditionality <<" ,"<< this->getConditionality() << " : " << this->getRule() << " " << this->getFirstLine() << endl;
 
         if (!conditionality)
         {
@@ -1278,6 +1257,7 @@ public:
         for (auto x : this->getSubordinate())
         {
             conditionality = true;
+            setConditonalityToChild(i + 1, true);
             bool neededBefore = needed;
             // out << ";" << x->getSubordinateCount() << " children\n";
             //  out<<";before processing : "
@@ -1285,12 +1265,12 @@ public:
             {
                 if (x->getSubordinateCount() > 1)
                 {
-                    // genCode(";setting needed false for " + x->getRule());
+                    genCode(";setting needed false for " + x->getRule());
                     needed = false;
                 }
                 else if (x->getSubordinateCount() == 1)
                 {
-                    // genCode(";setting needed true for " + x->getRule());
+                    genCode(";setting needed true for " + x->getRule());
                     needed = true;
                 }
             }
@@ -1336,11 +1316,11 @@ public:
         string prevNext = getNextLabel();
         if (getNextLabel() == "")
         {
-            cout << "--------------------------------settting new label for compound statement..." << endl;
+            // cout << "--------------------------------settting new label for compound statement..." << endl;
             this->setNextLabel(getNewLabel());
-            cout << "--------------------------------exitLabel pushing : " << getNextLabel() << endl;
+            // cout << "--------------------------------exitLabel pushing : " << getNextLabel() << endl;
             exitLabel.push(this->getNextLabel());
-            cout << "--------------------------------exitLabel pushing test: " << exitLabel.top() << endl;
+            // cout << "--------------------------------exitLabel pushing test: " << exitLabel.top() << endl;
         }
         // ParserNode* p=getSubordinateNth(2);
         // p->setNextLabel(getNextLabel());
@@ -1404,10 +1384,10 @@ public:
         copyBooleanLabelsToChild(2);
         vector<ParserNode *> children = getSubordinate();
         children[0]->setNextLabel(getNewLabel());
-        // cout<<"set next label for child0 at statements statement "<<children[0]->getNextLabel()<<endl;
+        // //cout<<"set next label for child0 at statements statement "<<children[0]->getNextLabel()<<endl;
         children[1]->setNextLabel(getNextLabel());
 
-        // cout<<"testing child1 at statements statement ";
+        // //cout<<"testing child1 at statements statement ";
         // children[0]->print();
         // children[1]->print();
         setSubordinate(children);
@@ -1432,6 +1412,7 @@ public:
     {
         this->setLabelsToChild(5, "", "", this->getNextLabel());
         this->setLabelsToChild(3, "fall", this->getNextLabel(), "");
+        bool conditionalitybefore = conditionality;
 
         int i = 0;
         for (auto x : this->getSubordinate())
@@ -1439,15 +1420,21 @@ public:
             if (i == 2)
             {
                 conditionality = true;
+                setConditonalityToChild(i + 1, true);
             }
 
-            cout << x->getRule() << " LINE: " << x->getFirstLine() << x->getTrueLabel() << " " << x->getFalseLabel() << " " << x->getNextLabel() << endl;
+            // cout << x->getRule() << " LINE: " << x->getFirstLine() << x->getTrueLabel() << " " << x->getFalseLabel() << " " << x->getNextLabel() << endl;
 
             x->processCode(out);
+
+            // if(i==2){
+            //     pop("AX");
+            // }
 
             i++;
             conditionality = false;
         }
+        conditionality = conditionalitybefore;
     }
 };
 
@@ -1463,6 +1450,7 @@ public:
     {
         this->setLabelsToChild(5, "", "", this->getNextLabel());
         this->setLabelsToChild(7, "", "", this->getNextLabel());
+        bool conditionalitybefore = conditionality;
 
         this->setLabelsToChild(3, "fall", getNewLabel(), "");
 
@@ -1474,13 +1462,18 @@ public:
             if (i == 2)
             {
                 conditionality = true;
+                setConditonalityToChild(i + 1, true);
                 btrue = x->getTrueLabel();
                 bfalse = x->getFalseLabel();
             }
 
-            cout << x->getRule() << " LINE: " << x->getFirstLine() << x->getTrueLabel() << " " << x->getFalseLabel() << " " << x->getNextLabel() << endl;
+            // cout << x->getRule() << " LINE: " << x->getFirstLine() << x->getTrueLabel() << " " << x->getFalseLabel() << " " << x->getNextLabel() << endl;
 
             x->processCode(out);
+
+            // if(i==2){
+            //     pop("AX");
+            // }
 
             if (i == 4)
             {
@@ -1491,6 +1484,46 @@ public:
             i++;
             conditionality = false;
         }
+        conditionality = conditionalitybefore;
+    }
+};
+
+class for_statement : public statement
+{
+public:
+    for_statement(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
+        : statement(firstLine, lastLine, matchedRule, dataType, value)
+    {
+    }
+
+    void processCode(ofstream &out)
+    {
+        string loop = getNewLabel();
+        string exec = getNewLabel();
+        bool conditionalitybefore = conditionality;
+
+        setLabelsToChild(4, exec, getNextLabel(), "");
+        setLabelsToChild(7, "", "", loop);
+
+        vector<ParserNode *> children = this->getSubordinate();
+
+        children[2]->processCode(out);
+        out << loop << ":\n";
+
+        conditionality = true;
+        setConditonalityToChild(3 + 1, true);
+        children[3]->processCode(out);
+        conditionality = false;
+
+        out << children[3]->getTrueLabel() << ":\n";
+        children[6]->processCode(out);
+
+        children[4]->processCode(out);
+
+        genCode(";popping for expression from for");
+        pop("AX");
+        genCode("JMP " + loop);
+        conditionality = conditionalitybefore;
     }
 };
 
@@ -1505,8 +1538,9 @@ public:
     void processCode(ofstream &out)
     {
         string begin = getNewLabel();
-        this->setLabelsToChild(5, "", "", begin);
-        this->setLabelsToChild(3, "fall", this->getNextLabel(), "");
+        this->setLabelsToChild(5, "", "", begin, true);
+        this->setLabelsToChild(3, "fall", this->getNextLabel(), "", true);
+        bool conditionalitybefore = conditionality;
 
         int i = 0;
         printLabel(begin);
@@ -1514,20 +1548,27 @@ public:
         {
             if (i == 2)
             {
-
-                cout << x->getRule() << " LINE: " << x->getFirstLine() << x->getTrueLabel() << " " << x->getFalseLabel() << " " << x->getNextLabel() << endl;
-
-                x->processCode(out);
-
-                if (i == 4)
-                {
-                    genCode("JMP " + begin);
-                }
-
-                i++;
-                conditionality = false;
+                conditionality = true;
+                setConditonalityToChild(i + 1, true);
+                out << ";" << x->getRule() << " LINE: " << x->getFirstLine() << x->getTrueLabel() << " " << x->getFalseLabel() << " " << x->getNextLabel() << endl;
             }
+
+            x->processCode(out);
+
+            // if(i==2){
+
+            //     pop("AX");
+            // }
+
+            if (i == 4)
+            {
+                genCode("JMP " + begin);
+            }
+
+            i++;
+            conditionality = false;
         }
+        conditionality = conditionalitybefore;
     }
 };
 
@@ -1547,12 +1588,12 @@ public:
         }
         pop("AX");
         string to_exit = "";
-        cout << "--exit Label size = " << exitLabel.size() << endl;
+        // cout << "--exit Label size = " << exitLabel.size() << endl;
         if (exitLabel.size() > 0)
         {
             to_exit = exitLabel.top();
             // exitLabel.pop();
-            cout << " assigned to exit to :  " << to_exit << endl;
+            // cout << " assigned to exit to :  " << to_exit << endl;
         }
 
         // returned=true;
@@ -1578,21 +1619,23 @@ class simp_relexp : public rel_expression
     // }
     void relHandler()
     {
-        // cout << "relHandler called" << endl;
-        // cout << "operator: " << getOperator() << endl;
+        // //cout << "relHandler called" << endl;
+        // //cout << "operator: " << getOperator() << endl;
+        genCode(";--------------------------------cond,need = " + to_string(conditionality) + " ," + to_string(needed));
+        cout << "conditionality ,tC = " << conditionality << " , " << this->getConditionality() <<": "<<this->getRule()<<" : "<<this->getFirstLine()<< endl;
 
         if (conditionality && needed)
         {
-            // genCode(";-------------------------------- simp of rel called--------------------------------\n");
+            genCode(";-------------------------------- simp of rel called--------------------------------\n");
             if (this->getTrueLabel() == "")
             {
                 this->setTrueLabel(getNewLabel());
-                // genCode(";---------------------------simp created TRUE label =" + getTrueLabel() + "\n");
+                genCode(";---------------------------simp created TRUE label =" + getTrueLabel() + "\n");
             }
             if (this->getFalseLabel() == "")
             {
                 this->setFalseLabel(getNewLabel());
-                // genCode(";---------------------------simp created false label =" + getFalseLabel() + "\n");
+                genCode(";---------------------------simp created false label =" + getFalseLabel() + "\n");
             }
 
             string btrue = this->getTrueLabel();
@@ -1600,8 +1643,8 @@ class simp_relexp : public rel_expression
 
             // pop("DX");
 
-            cout << "btrue ,bfalse = " << btrue << " " << bfalse << endl;
-            // genCode(";conditionality of simple exp");
+            // cout << "btrue ,bfalse = " << btrue << " " << bfalse << endl;
+            genCode(";conditionality of simple exp");
             pop("AX");
             genCode("CMP AX, 0");
             string label1 = btrue;
@@ -1609,8 +1652,7 @@ class simp_relexp : public rel_expression
 
             if (btrue != "fall" && bfalse != "fall")
             {
-                // genCode(""+getJumpInstruction()+" "+btrue);
-                // genCode("JMP "+bfalse);
+
                 genCode("" + getJumpInstruction() + " " + label1);
                 genCode("JMP " + label2);
             }
@@ -1625,7 +1667,7 @@ class simp_relexp : public rel_expression
                 genCode("" + getFalseJumpInstruction() + " " + label2);
             }
             // needed = false;
-            // genCode(";-------------------------------- simp of rel done--------------------------------\n");
+            genCode(";-------------------------------- simp of rel done--------------------------------\n");
         }
         needed = false;
 
@@ -1648,7 +1690,7 @@ class simp_relexp : public rel_expression
 
         //}
         // conditionality = false;
-        // cout<< "relHandling done" << endl;
+        // //cout<< "relHandling done" << endl;
         // push("AX");
     }
 
@@ -1662,8 +1704,8 @@ public:
         copyLabelsToChild(1);
         // copyNextLabelsToChild(3);
 
-        // cout << "-------------------------------- simp of rel called--------------------------------" << endl;
-        //  cout << "is conditional = " << conditionality << endl;
+        // //cout << "-------------------------------- simp of rel called--------------------------------" << endl;
+        //  //cout << "is conditional = " << conditionality << endl;
         // //out << ";--------------------------------simp_rel\n";
         // out << ";needed for simp relexp = " << needed << endl;
         for (auto x : this->getSubordinate())
@@ -1673,6 +1715,6 @@ public:
         }
         relHandler();
         // //out << ";--------------------------------simp of rel done" << endl;
-        cout << "exiting rel: sim" << endl;
+        // cout << "exiting rel: sim" << endl;
     }
 };

@@ -19,16 +19,17 @@ class ParserNode
     SymbolInfo *symbolInfo;
     string trueLabel, falseLabel, nextLabel;
     string op;
-   // bool conditionality,noop;
+    bool isConditonal, isNeeded;
+    // bool isConditonal,noop;
     // int isCondit;
     // bool cf;
-   //
+    //
 
 public:
-   // bool conditionality;
+    // bool isConditonal;
     ParserNode(int firstLine, int lastLine, string matchedRule, string dataType = "", string value = "")
     {
-       // cout << "const called for parserNode\n";
+        // cout << "const called for parserNode\n";
         this->firstLine = firstLine;
         this->lastLine = lastLine;
         this->matchedRule = matchedRule;
@@ -46,24 +47,26 @@ public:
         falseLabel = "";
         nextLabel = "";
         op = "";
-        //conditionality=false;
-       // isc="false";
-       
-       
+        isConditonal = false;
+        isNeeded= false;
+        // isConditonal=false;
+        // isc="false";
+
         // size_t found = matchedRule.find("error");
         // isError|= (found != std::string::npos);
         // If found is not equal to std::string::npos, it means "error" was found
     }
     ~ParserNode()
-    {   
+    {
 
-        cout <<endl<< "--------------------------------destructor--------------------------------" << endl<< endl;
+        cout << endl
+             << "--------------------------------destructor--------------------------------" << endl
+             << endl;
         for (auto p : subordinates)
         {
             delete p;
         }
     }
-
 
     string getTrueLabel()
     {
@@ -91,9 +94,9 @@ public:
     ParserNode *setNextLabel(string label)
     {
         this->nextLabel = label;
-        
-            // cout<<"setNextLabel to "<<this->nextLabel<<" for "<<this->getRule()<<" at line "<<firstLine<<endl;
-            return this;
+
+        // cout<<"setNextLabel to "<<this->nextLabel<<" for "<<this->getRule()<<" at line "<<firstLine<<endl;
+        return this;
     }
     int getFirstLine() { return firstLine; }
     int getLastLine() { return lastLine; }
@@ -292,20 +295,60 @@ public:
         return this;
     }
 
-    ParserNode *setLabelsToChild(int n,string t,string f,string nl){
-            if (n > subordinates.size())
+    ParserNode *setLabelsToChild(int n, string t, string f, string nl, bool echo = false)
+    {
+        if (n > subordinates.size())
             return this;
-            if(!t.empty())
+        if (!t.empty())
             subordinates[n - 1]->setTrueLabel(t);
-            if(!f.empty())
+        if (!f.empty())
             subordinates[n - 1]->setFalseLabel(f);
-            if(!nl.empty())
+        if (!nl.empty())
             subordinates[n - 1]->setNextLabel(nl);
-            return this;
-
+        if (echo)
+        {
+            cout << "----------------------------------------------------------------set as " << subordinates[n - 1]->getTrueLabel() << ", " << subordinates[n - 1]->getFalseLabel() << "," << subordinates[n - 1]->getNextLabel() << endl;
+        }
+        return this;
     }
-    int getSubordinateCount(){
+    int getSubordinateCount()
+    {
         return subordinates.size();
     }
 
+    ParserNode *setisConditonal(bool flag)
+    {
+        this->isConditonal = flag;
+        return this;
+    }
+    ParserNode *setNeeded(bool flag)
+    {
+
+        this->isNeeded= flag;
+        return this;
+    }
+
+    ParserNode *setConditonalityToChild(int n, bool cond)
+    {
+        if (n > subordinates.size())
+            return this;
+
+        subordinates[n - 1]->setisConditonal(cond);
+        return this;
+    }
+
+    ParserNode *setNeededToChild(int n, bool cond)
+    {
+        if (n > subordinates.size())
+            return this;
+
+        subordinates[n - 1]->setNeeded(cond);
+        return this;
+    }
+    bool getConditionality(){
+        return isConditonal;
+    }
+    bool isNeededAction(){
+        return isNeeded;
+    }
 };
