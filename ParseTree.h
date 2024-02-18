@@ -135,7 +135,7 @@ public:
             return;
         }
         out << matchedRule << " \t"
-            << "<Line: " << firstLine << "-" << lastLine << ">(" << trueLabel << "," << falseLabel << "," << nextLabel << ")\n";
+            << "<Line: " << firstLine << "-" << lastLine << ">\n";
         if (subordinates.size() == 0)
         {
             return;
@@ -313,6 +313,21 @@ public:
         }
         return this;
     }
+    // ParserNode* flipBooleanLabes(){
+    //     string prevt=getTrueLabel();
+    //     string prevFalse=getFalseLabel();
+
+    //     this->setTrueLabel(prevFalse);
+    //     this->setFalseLabel(prevt);
+
+    //     return this;
+
+    // }
+
+
+
+
+
     int getSubordinateCount()
     {
         return subordinates.size();

@@ -22,12 +22,13 @@ int stack_offset = 0;
 int label = 0;
 vector<map<string, int>> offsetmap;
 stack<string> exitLabel;
+bool notFlag = false;
 // bool needed = false;
-int stack_excess = 0;
+// int stack_excess = 0;
 
 void printDebug(ParserNode *p, bool c, bool ne)
 {
-    asmOut<<";" << p->getRule() << " " << p->getFirstLine() << " f: " << c << "," << ne << endl;
+    asmOut << ";" << p->getRule() << " " << p->getFirstLine() << " f: " << c << "," << ne << endl;
 }
 void printOffsetMap()
 {
@@ -177,7 +178,7 @@ void push(std::string reg, std::string comment = "")
     {
         // cout << " ; " << comment;
     }
-    stack_excess++;
+    // stack_excess++;
 
     asmOut << endl;
 }
@@ -191,7 +192,7 @@ void push(int val, std::string comment = "")
         asmOut << " ; " << comment;
     }
     asmOut << endl;
-    stack_excess++;
+    // stack_excess++;
 }
 
 void pop(std::string reg, std::string comment = "")
@@ -200,11 +201,11 @@ void pop(std::string reg, std::string comment = "")
            << "POP " << reg;
     if (comment.length() > 0)
     {
-        asmOut<<"; " << comment;
+        asmOut << "; " << comment;
     }
 
     asmOut << endl;
-    stack_excess--;
+    // stack_excess--;
 }
 
 void genStartCode(ParserNode *node, SymbolTable *table)
@@ -243,8 +244,15 @@ void genStartCode(ParserNode *node, SymbolTable *table)
 
     if (isPrinterCalled)
     {
+        string libStart = R"(
+;-------------------------------
+;         print library         
+;-------------------------------
+)";
+        asmOut << libStart << endl;
         asmOut << newLineProc() << endl;
         asmOut << printlnProc() << endl;
+        asmOut << ";--------------------------------\n";
     }
     asmOut << "END main\n";
     asmOut.close();
@@ -263,7 +271,7 @@ public:
     }
     void processCode(ofstream &asmOut, bool conditionality, bool &needed)
     {
-        //printDebug(this, conditionality, needed);
+        // printDebug(this, conditionality, needed);
         for (auto x : this->getSubordinate())
         {
             x->processCode(asmOut, conditionality, needed);
@@ -324,17 +332,9 @@ class func_definition : public ParserNode
     void funcCompleted()
     {
         string func_name = this->getValue();
-        // PrintNewLabel();
-        // printLabel(func_name+"_Exit");
-        // printLabel(func_name+"_Exit");
+
         printLabel(getNewLabel());
 
-        // cout << "stack excess: -------------------------------- of " << func_name << " : " << stack_excess << endl;
-        // cout << "stack excess: -------------------------------- of " << func_name << " : " << stack_excess << endl;
-        //  for(int i=0; i<stack_excess; i++){
-        //      pop("DX");
-        //  }
-        stack_excess = 0;
         if (stack_offset > 0)
         {
             genCode("ADD SP, " + to_string(stack_offset));
@@ -374,7 +374,7 @@ public:
     }
     void processCode(ofstream &asmOut, bool conditionality, bool &needed)
     {
-        //printDebug(this, conditionality, needed);
+        // printDebug(this, conditionality, needed);
         genFunctioninitCode();
         for (auto x : this->getSubordinate())
         {
@@ -428,7 +428,7 @@ public:
     }
     void processCode(ofstream &out, bool conditionality, bool &needed)
     {
-        //printDebug(this, conditionality, needed);
+        // printDebug(this, conditionality, needed);
         for (auto x : this->getSubordinate())
         {
             x->processCode(out, conditionality, needed);
@@ -470,7 +470,8 @@ public:
     }
     void processCode(ofstream &out, bool conditionality, bool &needed)
     {
-        //printDebug(this, conditionality, needed);
+        // printDebug(this, conditionality, needed);
+        copyLabelsToChild(1);
         for (auto x : this->getSubordinate())
         {
             x->processCode(out, conditionality, needed);
@@ -523,7 +524,8 @@ public:
     }
     void processCode(ofstream &out, bool conditionality, bool &needed)
     {
-        //printDebug(this, conditionality, needed);
+        // printDebug(this, conditionality, needed);
+        copyLabelsToChild(1);
         for (auto x : this->getSubordinate())
         {
             x->processCode(out, conditionality, needed);
@@ -563,9 +565,9 @@ public:
     }
     void processCode(ofstream &out, bool conditionality, bool &needed)
     {
-
+        copyLabelsToChild(1);
         // ParserNode* var=this->getSubordinateNth(1);
-        //printDebug(this, conditionality, needed);
+        // printDebug(this, conditionality, needed);
         SymbolInfo *si = this->getSymbolInfo();
         // //cout<<" constant "<<*si<<endl;
         out << "\tMOV AX, " << si->getName() << endl;
@@ -582,7 +584,7 @@ public:
     }
     void processCode(ofstream &out, bool conditionality, bool &needed)
     {
-        //printDebug(this, conditionality, needed);
+        // printDebug(this, conditionality, needed);
         this->copyLabelsToChild(2);
         bool neededBefore = needed;
         //    needed=false;
@@ -590,6 +592,8 @@ public:
         // //out<<";----------------------------------------------------------------setting needed false for factor:lp exp rp";
 
         ParserNode *pn = this->getSubordinateNth(2);
+        notFlag = false;
+       // out << ";setting notF false from " << getRule() << endl;
         // //cout<<"fact (E)"<<" "<<pn->getTrueLabel()<<" "<<pn->getFalseLabel()<<pn->getNextLabel()<<endl;
         // needed=false;
         for (auto x : this->getSubordinate())
@@ -611,7 +615,7 @@ public:
     void processCode(ofstream &out, bool conditionality, bool &needed)
     {
         //////cout<<"funcCall_factor processCode ----------------------------------------------------------------\n"<<endl;
-        //printDebug(this, conditionality, needed);
+        // printDebug(this, conditionality, needed);
         for (auto x : this->getSubordinate())
         {
             x->processCode(out, conditionality, needed);
@@ -649,7 +653,7 @@ public:
     }
     void processCode(ofstream &out, bool conditionality, bool &needed)
     {
-        //printDebug(this, conditionality, needed);
+        // printDebug(this, conditionality, needed);
         copyLabelsToChild(2);
         for (auto x : this->getSubordinate())
         {
@@ -674,8 +678,7 @@ public:
     }
     void processCode(ofstream &out, bool conditionality, bool &needed)
     {
-        //printDebug(this, conditionality, needed);
-
+        // printDebug(this, conditionality, needed);
 
         this->copyOppositeLabelsToChild(2);
         for (auto x : this->getSubordinate())
@@ -695,22 +698,9 @@ public:
         string label1 = getFalseLabel();
         string label2 = getTrueLabel();
 
-        //      		genCode("POP AX");  ///////////////////this is kept as backup
-        // genCode("CMP AX, 0");
-        // genCode("JNE " + label1);
-
-        // genCode("PUSH 1");
-        // genCode("JMP " + label2);
-        // genCode(label1 + ":");
-        // genCode("PUSH 0");
-        // genCode(label2 + ":");
-
-        // genCode("POP AX");
-
-        //cout << "cond, tC =" << conditionality << " ," << this->getConditionality() << " : " << this->getRule() << " " << this->getFirstLine() << endl;
-
         if (!conditionality)
         {
+            //out << ";no conditionality on not unary operator\n";
             pop("AX");
             genCode("CMP AX, 0");
             if (label1 != "fall")
@@ -726,22 +716,13 @@ public:
         }
         else
         {
+            notFlag = true;
+           // out << ";setting NOT TRUE FROM NOT UNARY\n";
             // if (label1 != "fall")
             //     genCode("JNE " + label1);
             // if (label2 != "fall")
             //     genCode("JE " + label2);
         }
-
-        // genCode("CMP AX,0");
-
-        // genCode("JE "+l1);
-        // genCode("MOV AX,0");
-
-        // genCode("JMP "+l2);
-        // out<<l1<<" : ";
-        // genCode("MOV AX,1");
-        // out<<l2<<" : ";
-        // push("AX");
     }
 };
 
@@ -767,7 +748,7 @@ public:
 
     void processCode(ofstream &out, bool conditionality, bool &needed)
     {
-        //printDebug(this, conditionality, needed);
+        // printDebug(this, conditionality, needed);
         copyLabelsToChild(1);
         copyLabelsToChild(3);
         for (auto x : this->getSubordinate())
@@ -811,7 +792,7 @@ public:
 
     void processCode(ofstream &out, bool conditionality, bool &needed)
     {
-        //printDebug(this, conditionality, needed);
+        // printDebug(this, conditionality, needed);
         copyLabelsToChild(1);
         copyLabelsToChild(3);
 
@@ -875,8 +856,9 @@ public:
     }
     void processCode(ofstream &out, bool conditionality, bool &needed)
     {
-        //printDebug(this, conditionality, needed);
+        // printDebug(this, conditionality, needed);
         copyLabelsToChild(3);
+        copyLabelsToChild(1);
 
         for (int i = this->getSubordinate().size(); i > 0; i--)
         {
@@ -897,7 +879,7 @@ public:
     }
     void processCode(ofstream &out, bool conditionality, bool &needed)
     {
-        //printDebug(this, conditionality, needed);
+        // printDebug(this, conditionality, needed);
         copyLabelsToChild(1);
 
         for (auto x : this->getSubordinate())
@@ -928,7 +910,7 @@ public:
 
     void processCode(ofstream &out, bool conditionality, bool &needed)
     {
-        //printDebug(this, conditionality, needed);
+        // printDebug(this, conditionality, needed);
         for (auto x : this->getSubordinate())
         {
             x->processCode(out, conditionality, needed);
@@ -1013,11 +995,13 @@ class simp_relop_simp_relexp : public rel_expression
         genCode("CMP AX, DX");
 
         // cout << "btrue ,bfalse = " << btrue << " " << bfalse << endl;
-       // cout << "cond, tC =" << conditionality << " ," << this->getConditionality() << " : " << this->getRule() << " " << this->getFirstLine() << endl;
+        // cout << "cond, tC =" << conditionality << " ," << this->getConditionality() << " : " << this->getRule() << " " << this->getFirstLine() << endl;
         if (conditionality)
         {
             string label1 = btrue;
             string label2 = bfalse;
+
+           // genCode(";from relHandler of simp rel simp");
 
             if (btrue != "fall" && bfalse != "fall")
             {
@@ -1053,7 +1037,7 @@ class simp_relop_simp_relexp : public rel_expression
         // }
 
         // if not called from if,else,loop
-      //  cout << "cond, tC =" << conditionality << " ," << this->getConditionality() << " : " << this->getRule() << " " << this->getFirstLine() << endl;
+        //  cout << "cond, tC =" << conditionality << " ," << this->getConditionality() << " : " << this->getRule() << " " << this->getFirstLine() << endl;
         if (!conditionality)
         {
 
@@ -1094,7 +1078,7 @@ public:
     }
     void processCode(ofstream &out, bool conditionality, bool &needed)
     {
-        //printDebug(this, conditionality, needed);
+        // printDebug(this, conditionality, needed);
         copyNextLabelsToChild(1);
         copyNextLabelsToChild(3);
 
@@ -1114,7 +1098,7 @@ public:
         }
 
         relHandler(conditionality);
-        //out<<";needed being turned off by " << getRule() << endl;
+        // out<<";needed being turned off by " << getRule() << endl;
         needed = false;
 
         // cout << "exiting relop " << endl;
@@ -1139,7 +1123,7 @@ public:
     }
     void processCode(ofstream &out, bool conditionality, bool &needed)
     {
-        //printDebug(this, conditionality, needed);
+        // printDebug(this, conditionality, needed);
         copyLabelsToChild(1);
 
         if (conditionality && needed)
@@ -1152,11 +1136,10 @@ public:
                 needed = false;
             }
             else
-              {
-                  needed = true;
-                //out<<"; needed turned on by "<<this->getRule()<<endl;
-
-              }
+            {
+                needed = true;
+                // out<<"; needed turned on by "<<this->getRule()<<endl;
+            }
             // needed = true;
         }
         for (auto x : this->getSubordinate())
@@ -1170,10 +1153,18 @@ public:
             string btrue = this->getTrueLabel();
             string bfalse = this->getFalseLabel();
 
+            if (notFlag)
+            {
+                string temp = btrue;
+                btrue = bfalse;
+                bfalse = temp;
+                //out << ";flipping booleans" << endl;
+            }
+
             // pop("DX");
 
             // cout << "btrue ,bfalse = " << btrue << " " << bfalse << endl;
-            genCode(";conditionality of simple exp");
+           // genCode(";conditionality of simple exp");
             pop("AX");
             genCode("CMP AX, 0");
             string label1 = btrue;
@@ -1196,7 +1187,7 @@ public:
                 genCode("JE " + label2);
             }
             needed = false;
-            //out<<"; needed being turned off by 1182" << getRule() << endl;
+            // out<<"; needed being turned off by 1182" << getRule() << endl;
         }
 
         // vector<ParserNode *> children = this->getSubordinate();
@@ -1217,6 +1208,8 @@ class rel_logicop_rel : public logic_expression
 
     void actionNeeded(string btrue, string bfalse, bool &needed)
     {
+
+       // genCode(";from rel_logicop_rel action\n");
         pop("AX");
         genCode("CMP AX, 0");
         string label1 = btrue;
@@ -1239,7 +1232,7 @@ class rel_logicop_rel : public logic_expression
             genCode("JE " + label2);
         }
         needed = false;
-        //genCode(";needed being turned off locally");
+        // genCode(";needed being turned off locally");
     }
 
     void orHandler()
@@ -1254,7 +1247,6 @@ class rel_logicop_rel : public logic_expression
             children[0]->setTrueLabel(getNewLabel());
         }
         children[0]->setFalseLabel("fall");
-
         children[2]->setFalseLabel(getFalseLabel());
         children[2]->setTrueLabel(getTrueLabel());
         // //genCode(";By ORhandler,self = "+getTrueLabel()+","+getFalseLabel()+" ,"+getNextLabel());
@@ -1278,6 +1270,7 @@ class rel_logicop_rel : public logic_expression
         else
         {
             children[0]->setFalseLabel(getNewLabel());
+           // genCode(";set new label to child0 " + children[0]->getFalseLabel());
         }
         children[0]->setTrueLabel("fall");
 
@@ -1318,7 +1311,7 @@ class rel_logicop_rel : public logic_expression
 
     void andCoder()
     {
-        // genCode(";ANDcoder--------------------------------");
+        //genCode(";ANDcoder--------------------------------");
         if (getFalseLabel() == "fall")
         {
             genCode(children[0]->getFalseLabel() + ":\n", false);
@@ -1359,7 +1352,7 @@ public:
     }
     void processCode(ofstream &out, bool conditionality, bool &needed)
     {
-        //printDebug(this, conditionality, needed);
+        // printDebug(this, conditionality, needed);
         bool conditionalitybefore = conditionality;
         if (getTrueLabel() == "")
         {
@@ -1405,7 +1398,7 @@ public:
         vector<ParserNode *> children = this->getSubordinate();
         int grandchild0 = children[0]->getSubordinateCount();
         int grandchild2 = children[2]->getSubordinateCount();
-        //out<<"; gc0,gc2 =" << grandchild0 << "," << grandchild2 << endl;
+        // out<<"; gc0,gc2 =" << grandchild0 << "," << grandchild2 << endl;
         bool n1 = needed;
         bool n2 = needed;
 
@@ -1418,7 +1411,18 @@ public:
 
         if (n1)
         {
-            actionNeeded(children[0]->getTrueLabel(), children[0]->getFalseLabel(), n1);
+
+            if (notFlag)
+            {
+                actionNeeded(children[0]->getFalseLabel(), children[0]->getTrueLabel(), n1);
+                //out << ";flipping boolean labels\n";
+            }
+            else
+            {
+                actionNeeded(children[0]->getTrueLabel(), children[0]->getFalseLabel(), n1);
+            }
+            notFlag = false;
+            //out << ";not flag always turned of after action\n";
         }
 
         children[1]->processCode(out, conditionality, needed);
@@ -1428,18 +1432,28 @@ public:
         else
             n2 = true;
 
-        //out<<";before, n2 =" << n2 << endl;
+        // out<<";before, n2 =" << n2 << endl;
         children[2]->processCode(out, true, n2);
 
-        //out<<";after, n2 =" << n2 << endl;
+        // out<<";after, n2 =" << n2 << endl;
 
         if (n2)
         {
-            actionNeeded(children[2]->getTrueLabel(), children[2]->getFalseLabel(), n2);
+            if (notFlag)
+            {
+                actionNeeded(children[2]->getFalseLabel(), children[2]->getTrueLabel(), n1);
+                //out << ";flipping boolean labels of children 2" << endl;
+            }
+            else
+            {
+                actionNeeded(children[2]->getTrueLabel(), children[2]->getFalseLabel(), n2);
+            }
+            notFlag = false;
+            //out << ";not flag always turned of after action\n";
         }
         Coder(conditionality); // extra labels
         needed = false;
-        //out<<"; needed off by " << this->getRule() << endl;
+        // out<<"; needed off by " << this->getRule() << endl;
     }
 };
 
@@ -1453,7 +1467,7 @@ public:
 
     void processCode(ofstream &out, bool conditionality, bool &needed)
     {
-        //printDebug(this, conditionality, needed);
+        // printDebug(this, conditionality, needed);
         copyLabelsToChild(1);
 
         for (auto x : this->getSubordinate())
@@ -1473,7 +1487,7 @@ public:
 
     void processCode(ofstream &out, bool conditionality, bool &needed)
     {
-        //printDebug(this, conditionality, needed);
+        // printDebug(this, conditionality, needed);
         string prevNext = getNextLabel();
         if (getNextLabel() == "")
         {
@@ -1520,9 +1534,9 @@ public:
 
     void processCode(ofstream &out, bool conditionality, bool &needed)
     {
-        //printDebug(this, conditionality, needed);
+        // printDebug(this, conditionality, needed);
         copyLabelsToChild(1);
-        out<<";--------------------------------; LINE " << this->getSubordinateNth(1)->getFirstLine() << endl;
+        out << ";--------------------------------; LINE " << this->getSubordinateNth(1)->getFirstLine() << endl;
         for (auto x : this->getSubordinate())
         {
             x->processCode(out, conditionality, needed);
@@ -1541,9 +1555,11 @@ public:
 
     void processCode(ofstream &out, bool conditionality, bool &needed)
     {
-        //printDebug(this, conditionality, needed);
+        // printDebug(this, conditionality, needed);
         copyBooleanLabelsToChild(1);
         copyBooleanLabelsToChild(2);
+        copyLabelsToChild(2);
+
         vector<ParserNode *> children = getSubordinate();
         children[0]->setNextLabel(getNewLabel());
         // //cout<<"set next label for child0 at statements statement "<<children[0]->getNextLabel()<<endl;
@@ -1557,7 +1573,7 @@ public:
         children[0]->processCode(out, conditionality, needed);
 
         out << children[0]->getNextLabel() << ":\n";
-        out<<";--------------------------------; LINE " << children[1]->getFirstLine() << endl;
+        out << ";--------------------------------; LINE " << children[1]->getFirstLine() << endl;
         children[1]->processCode(out, conditionality, needed);
     }
 };
@@ -1572,7 +1588,7 @@ public:
 
     void processCode(ofstream &out, bool conditionality, bool &needed)
     {
-        //printDebug(this, conditionality, needed);
+        // printDebug(this, conditionality, needed);
         this->setLabelsToChild(5, "", "", this->getNextLabel());
         this->setLabelsToChild(3, "fall", this->getNextLabel(), "");
         bool conditionalitybefore = conditionality;
@@ -1585,7 +1601,7 @@ public:
                 // conditionality = true;
                 setConditonalityToChild(i + 1, true);
 
-                needed=true;
+                needed = true;
                 x->processCode(out, true, needed);
                 // conditionality = conditionalitybefore;
             }
@@ -1615,7 +1631,7 @@ public:
 
     void processCode(ofstream &out, bool conditionality, bool &needed)
     {
-        //printDebug(this, conditionality, needed);
+        // printDebug(this, conditionality, needed);
         this->setLabelsToChild(5, "", "", this->getNextLabel());
         this->setLabelsToChild(7, "", "", this->getNextLabel());
         bool conditionalitybefore = conditionality;
@@ -1634,7 +1650,7 @@ public:
                 btrue = x->getTrueLabel();
                 bfalse = x->getFalseLabel();
 
-                needed=true;
+                needed = true;
                 x->processCode(out, true, needed);
             }
 
@@ -1669,17 +1685,17 @@ public:
     {
     }
 
-        void processCode(ofstream &out, bool conditionality, bool &needed)
+    void processCode(ofstream &out, bool conditionality, bool &needed)
     {
-        //printDebug(this, conditionality, needed);
+        // printDebug(this, conditionality, needed);
         string loop = getNewLabel();
         string exec = getNewLabel();
-        string incdec=getNewLabel();
+        string incdec = getNewLabel();
         bool conditionalitybefore = conditionality;
 
         setLabelsToChild(4, exec, getNextLabel(), "");
         setLabelsToChild(7, "", "", incdec);
-        setLabelsToChild(5,"","",loop);
+        setLabelsToChild(5, "", "", loop);
 
         vector<ParserNode *> children = this->getSubordinate();
 
@@ -1689,19 +1705,19 @@ public:
         // conditionality = true;
         setConditonalityToChild(3 + 1, true);
 
-        needed=true;
+        needed = true;
         children[3]->processCode(out, true, needed);
         // conditionality = false;
 
         out << children[3]->getTrueLabel() << ":\n";
         children[6]->processCode(out, conditionality, needed);
-        genCode("JMP "+children[6]->getNextLabel());
+        genCode("JMP " + children[6]->getNextLabel());
 
-        out<<incdec<<":\n";
+        out << incdec << ":\n";
 
         children[4]->processCode(out, conditionality, needed);
 
-       // genCode(";popping for expression from for");
+        // genCode(";popping for expression from for");
         pop("AX");
         genCode("JMP " + children[4]->getNextLabel());
         conditionality = conditionalitybefore;
@@ -1749,11 +1765,9 @@ public:
     {
     }
 
-
-
     void processCode(ofstream &out, bool conditionality, bool &needed)
     {
-        //printDebug(this, conditionality, needed);
+        // printDebug(this, conditionality, needed);
         string begin = getNewLabel();
         this->setLabelsToChild(5, "", "", begin, true);
         this->setLabelsToChild(3, "fall", this->getNextLabel(), "", true);
@@ -1766,11 +1780,11 @@ public:
             if (i == 2)
             {
 
-                needed=true;
+                needed = true;
                 x->processCode(out, true, needed);
                 // conditionality = true;
                 setConditonalityToChild(i + 1, true);
-                //out<<";" << x->getRule() << " LINE: " << x->getFirstLine() << x->getTrueLabel() << " " << x->getFalseLabel() << " " << x->getNextLabel() << endl;
+                // out<<";" << x->getRule() << " LINE: " << x->getFirstLine() << x->getTrueLabel() << " " << x->getFalseLabel() << " " << x->getNextLabel() << endl;
             }
             else
                 x->processCode(out, conditionality, needed);
@@ -1802,7 +1816,8 @@ public:
     }
     void processCode(ofstream &out, bool conditionality, bool &needed)
     {
-        //printDebug(this, conditionality, needed);
+        // printDebug(this, conditionality, needed);
+
         for (auto x : this->getSubordinate())
         {
             x->processCode(out, conditionality, needed);
@@ -1865,7 +1880,7 @@ class simp_relexp : public rel_expression
             // pop("DX");
 
             // cout << "btrue ,bfalse = " << btrue << " " << bfalse << endl;
-            genCode(";conditionality of simple exp");
+           // genCode(";conditionality of simple exp");
             pop("AX");
             genCode("CMP AX, 0");
             string label1 = btrue;
@@ -1923,7 +1938,7 @@ public:
     }
     void processCode(ofstream &out, bool conditionality, bool &needed)
     {
-        //printDebug(this, conditionality, needed);
+        // printDebug(this, conditionality, needed);
         copyLabelsToChild(1);
         // copyNextLabelsToChild(3);
 

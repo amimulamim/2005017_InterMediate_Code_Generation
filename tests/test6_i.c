@@ -32,6 +32,24 @@ int main(){
         i=i%10+20;
         println(i);
     }
+	if(a && !(b)){
+		j=10;
+		println(j);
+	}
+
+	if(!(a && b)){
+		j=11;
+		println(j);
+	}
+		if(!(!a && b)){
+		j=12;
+		println(j);
+	}
+
+		if(!(a && !b)){
+		j=11;
+		println(j);
+	}
 
 	if((i>0 && j) || (i<0 && i>-10))
 		i=100;
