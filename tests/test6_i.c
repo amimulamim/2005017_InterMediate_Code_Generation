@@ -17,41 +17,8 @@ int main(){
 	i=i-0;
 	i=i*1;
 	println(i);	
-    int j;
-    j=i<10;
-    println(j);
-    int a,b;
-    a=1;
-    b=5;
-    if(a && b){
-        i=i*5;
-        println(i);
-    }
-    b=0;
-    if(a && !b){
-        i=i%10+20;
-        println(i);
-    }
-	if(a && !(b)){
-		j=10;
-		println(j);
-	}
-
-	if(!(a && b)){
-		j=11;
-		println(j);
-	}
-		if(!(!a && b)){
-		j=12;
-		println(j);
-	}
-
-		if(!(a && !b)){
-		j=11;
-		println(j);
-	}
-
-	if((i>0 && j) || (i<0 && i>-10))
+	
+	if((i>0 && i<10) || (i<0 && i>-10))
 		i=100;
 	else 
 		i=200;
