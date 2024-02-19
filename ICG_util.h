@@ -862,6 +862,40 @@ public:
         }
 
         assignHandler(out);
+
+
+
+        //handling case like if(a=smth)  or while(x=smth) smth is an logic expression
+        //if such cases needed,comment it out
+        /*
+        if(conditionality){
+            pop("AX");
+            genCode("CMP AX,0");
+            string btrue=getTrueLabel();
+            string bfalse=getFalseLabel();
+            string label1 = btrue;
+            string label2 = bfalse;
+
+            if (btrue != "fall" && bfalse != "fall")
+            {
+
+                genCode("JNE " + label1);
+                genCode("JMP " + label2);
+            }
+            else if (btrue != "fall")
+            {
+
+                genCode("JNE " + label1);
+            }
+            else if (bfalse != "fall")
+            {
+                // genCode(""+getFalseJumpInstruction()+" "+bfalse);
+                genCode("JE " + label2);
+            }
+            needed = false;
+
+        }
+        */
     }
 };
 

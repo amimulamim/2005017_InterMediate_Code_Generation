@@ -29,6 +29,15 @@ vector<string> validJumpOperations = {
     "JGE"
 };
 
+vector<string> validRegisters = {
+"AX","BX","CX","DX","BP","SP","SI","DI"
+};
+
+bool isValidRegister(const string& str){
+    return find(validRegisters.begin(), validRegisters.end(), str) != validRegisters.end();
+}
+
+
 bool isValidJumpOperation(const string& str) {
 
     return find(validJumpOperations.begin(), validJumpOperations.end(), str) != validJumpOperations.end();
@@ -115,14 +124,22 @@ vector<string> tokenizeAndFilter(const string& line) {
     return tokens;
 }
 
-bool checkRedundantMoves(string& line1, string& line2){
+//retrun value is the number of lines to be removed.
+//If "MOV a,AX\
+    MOV AX,a" then  The first line should exist as we can read a later
+
+int checkRedundantMoves(string& line1, string& line2){
     vector<string> t1=tokenizeAndFilter(line1);
     vector<string> t2=tokenizeAndFilter(line2);
 
-    if(t1.size()!=3 || t2.size()!=3 ||   t1[0]!="MOV" || t2[0]!="MOV")return false;
+    if(t1.size()!=3 || t2.size()!=3 ||   t1[0]!="MOV" || t2[0]!="MOV")return 0;
 
-    if(t1[1]==t2[2] && t1[2]==t2[1])return true;
-    return false;
+    if(t1[1]==t2[2] && t1[2]==t2[1]){
+        if(isValidRegister(t1[1]))return 2;
+        else return 1;
+
+    }
+    return 0;
 
 }
 
@@ -325,19 +342,26 @@ int optimizeCode(const string& codeFile,const string& OptCodeFile)
 
         if(next>=0){
             string nextLine = processedLines[next];
+            int checkMove=checkRedundantMoves(processedLine,nextLine);
  
             if(isRedundantPushPop(processedLine, nextLine)){
                 toBePrinted[i]=false;
                 toBePrinted[next]=false;
             }
-            else if(checkRedundantMoves(processedLine,nextLine)){
+            else if(checkMove==2){
+                //mov ax,a mov a,ax case
                 toBePrinted[i]=false;
+                toBePrinted[next]=false;
+            }
+            else if(checkMove==1){
+                //mov a,ax  mov ax,a  case
                 toBePrinted[next]=false;
             }
             else if(redundantGotos(processedLine,nextLine)){ 
 
                 toBePrinted[i]=false;
-                //toBePrinted[next]=false;
+                //toBePrinted[next]=false;  //the label may be referred by someone else
+
             }
             
 

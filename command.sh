@@ -16,7 +16,7 @@ echo 'All ready, running'
 # ./2005017 errorrecover.c
 # ./2005017 noerror.c
 # ./2005017 sserror.c
-./2005017 tests/bonustest2_i.c
+./2005017 tests/custom_test_case.c
 
 
 
